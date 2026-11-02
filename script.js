@@ -223,67 +223,114 @@ Importance in Software Development:
     return h >>> 0;
   }
 
-  // Pagination engine: flow `state.content` across pages using line-count estimation.
+  // Pagination engine: flow `state.content` across pages using font-accurate line wrapping.
   // Respects explicit \f (PAGE_BREAK) markers inserted by the "⏎ New Page" button.
-  // Uses current ruleHeight + fontSize + margin to estimate lines-per-page and chars-per-line.
   function computeLinesPerPage() {
     // A4 usable height (~780px at 96 DPI below header) divided by rule height.
     return Math.max(14, Math.floor(780 / Math.max(14, state.ruleHeight)));
   }
-  function computeCharsPerLine() {
-    // A4 usable width ≈ 210mm - (margin + 15mm right pad) = ~170mm at default
-    // Convert to px at ~3.78 px/mm, then divide by avg glyph width (~0.48 * font size).
-    const usableMm = 210 - state.marginMm - 15;
-    const usablePx = usableMm * 3.78;
-    const glyphW = Math.max(6, state.fontSize * 0.48);
-    return Math.max(18, Math.floor(usablePx / glyphW));
+
+  const FONT_WIDTH_FACTORS = {
+    "Caveat": 0.43,
+    "Kalam": 0.46,
+    "Patrick Hand": 0.42,
+    "Shadows Into Light": 0.43,
+    "Homemade Apple": 0.58
+  };
+
+  let _measureCtx = null;
+  function measureStringWidth(text, fontSpec) {
+    if (typeof document !== "undefined" && document.createElement) {
+      if (!_measureCtx) {
+        const c = document.createElement("canvas");
+        _measureCtx = c.getContext("2d");
+      }
+      if (_measureCtx) {
+        _measureCtx.font = fontSpec;
+        return _measureCtx.measureText(text).width;
+      }
+    }
+    const factor = FONT_WIDTH_FACTORS[state.fontFamily] || 0.46;
+    return text.length * state.fontSize * factor;
+  }
+
+  function getUsableLineWidthPx() {
+    const paperWidthMm = state.paperSize === "letter" ? 215.9 : 210.0;
+    const leftMarginMm = state.pageStyle === "spiral"
+      ? Math.max(state.marginMm + 4, 28)
+      : (state.pageStyle === "blank" ? state.marginMm : state.marginMm + 4);
+    const rightMarginMm = 18;
+    const usableMm = Math.max(80, paperWidthMm - leftMarginMm - rightMarginMm);
+    return usableMm * 3.7795; // 96 DPI: 1mm = 3.7795px
   }
 
   function paginate(content) {
     const linesPerPage = computeLinesPerPage();
-    const charsPerLine = computeCharsPerLine();
+    const usableWidthPx = getUsableLineWidthPx();
+    const fontSpec = `${state.fontSize}px "${state.fontFamily}", cursive`;
+
     const sections = String(content).split(PAGE_BREAK);
     const pages = [];
     let page = "";
     let lineCount = 0;
-    let colPos = 0;
+    let currentLineWidth = 0;
 
     const pushPage = () => {
       if (pages.length < MAX_PAGES) pages.push(page.replace(/\n+$/, ""));
       page = "";
       lineCount = 0;
-      colPos = 0;
+      currentLineWidth = 0;
     };
 
     for (let s = 0; s < sections.length; s++) {
-      if (s > 0) pushPage();  // explicit page break
+      if (s > 0) pushPage(); // explicit page break
 
       const paragraphs = sections[s].split("\n");
       for (let p = 0; p < paragraphs.length; p++) {
         if (p > 0) {
           page += "\n";
-          if (colPos > 0) lineCount++;
-          colPos = 0;
+          if (currentLineWidth > 0) lineCount++;
+          currentLineWidth = 0;
         }
         if (lineCount >= linesPerPage) pushPage();
 
         const words = paragraphs[p].split(/( )/); // keep spaces as tokens
         for (const token of words) {
           if (token === "") continue;
-          if (colPos + token.length > charsPerLine && colPos > 0) {
+          const tokenWidth = measureStringWidth(token, fontSpec);
+
+          // If a single word/token exceeds the entire line width (e.g. long equation or URL), break it cleanly
+          if (tokenWidth > usableWidthPx && token !== " ") {
+            for (let c = 0; c < token.length; c++) {
+              const ch = token[c];
+              const chW = measureStringWidth(ch, fontSpec);
+              if (currentLineWidth + chW > usableWidthPx && currentLineWidth > 0) {
+                lineCount++;
+                currentLineWidth = 0;
+                page += "\n";
+                if (lineCount >= linesPerPage) pushPage();
+              }
+              page += ch;
+              currentLineWidth += chW;
+            }
+            continue;
+          }
+
+          if (currentLineWidth + tokenWidth > usableWidthPx && currentLineWidth > 0) {
             lineCount++;
-            colPos = 0;
+            currentLineWidth = 0;
             page += "\n";
             if (lineCount >= linesPerPage) pushPage();
           }
+
           page += token;
-          colPos += token.length;
+          currentLineWidth += tokenWidth;
         }
       }
-      // close trailing line in paragraph set
-      if (colPos > 0) {
+
+      if (currentLineWidth > 0) {
         lineCount++;
-        colPos = 0;
+        currentLineWidth = 0;
       }
       if (lineCount >= linesPerPage) pushPage();
     }
@@ -505,6 +552,9 @@ Importance in Software Development:
     const lines = raw.split(/\r?\n/);
     const frag = document.createDocumentFragment();
 
+    // Track repeated letters so consecutive identical glyphs (e.g. double 'e', 'l', 'o') receive alternate shapes
+    const charOccurrences = {};
+
     lines.forEach((lineText, lineIdx) => {
       const lineEl = document.createElement("div");
       lineEl.className = "hand-line";
@@ -515,11 +565,15 @@ Importance in Software Development:
         return;
       }
 
-      // 1. Natural Movement: Organic line start drift (margin drift)
+      // 1. Natural Movement: Organic line start drift (margin drift) and line-to-line spacing variance
       if (naturalMove) {
         const lineRand = mulberry32(baseSeed + lineIdx * 1337);
         const lineDrift = (Math.sin(lineIdx * 0.45) * 3.5 + (lineRand() - 0.5) * 3.0) * intensity;
         lineEl.style.paddingLeft = Math.max(0, lineDrift).toFixed(1) + "px";
+
+        // Natural movement: line spacing / pitch variance
+        const lineSpacingJitter = (lineRand() - 0.5) * 1.6 * intensity;
+        lineEl.style.transform = `translateY(${lineSpacingJitter.toFixed(2)}px)`;
       }
 
       // Split into words
@@ -530,11 +584,11 @@ Importance in Software Development:
 
         // 2. Natural Movement: Word baseline wobble & variable word spacing
         if (naturalMove) {
-          const wobble = Math.sin((lineIdx * 2.5 + wordIdx) * 0.7) * 1.4 * intensity;
+          const wobble = Math.sin((lineIdx * 2.5 + wordIdx) * 0.7) * 1.3 * intensity;
           wordEl.style.transform = `translateY(${wobble.toFixed(2)}px)`;
 
           const wordRand = mulberry32(baseSeed + lineIdx * 100 + wordIdx * 17);
-          const space = (0.34 + wordRand() * 0.18 * intensity).toFixed(2);
+          const space = (0.34 + wordRand() * 0.20 * intensity).toFixed(2);
           wordEl.style.setProperty("--word-space", `${space}em`);
         }
 
@@ -545,20 +599,24 @@ Importance in Software Development:
           glyphEl.className = "hand-glyph";
           glyphEl.textContent = ch;
 
-          // Deterministic PRNG for this glyph
-          const glyphSeed = baseSeed + (lineIdx * 1000) + (wordIdx * 50) + (chIdx * 7) + ch.charCodeAt(0);
+          // Track letter occurrence to give repeated letters distinct alternate variations
+          const occ = (charOccurrences[ch] = (charOccurrences[ch] || 0) + 1);
+
+          // Deterministic PRNG for this glyph including occurrence count
+          const glyphSeed = baseSeed + (lineIdx * 7919) + (wordIdx * 499) + (chIdx * 31) + (occ * 1337) + ch.charCodeAt(0);
           const glyphRand = mulberry32(glyphSeed);
 
-          // 3. Vary each letter: Per-character random rotation, scale, micro-jitter
+          // 3. Vary each letter: Per-character random rotation, scale, slant/skew, micro-jitter
           if (varyLetter) {
             const r = () => (glyphRand() - 0.5) * 2;
-            const rot = (r() * 2.2 * intensity).toFixed(2);
+            const rot = (r() * 2.4 * intensity).toFixed(2);
             const dy = (r() * 1.1 * intensity).toFixed(2);
-            const sx = (1 + r() * 0.035 * intensity).toFixed(3);
-            const sy = (1 + r() * 0.035 * intensity).toFixed(3);
-            const mr = (r() * 0.4 * intensity).toFixed(2);
+            const sx = (1 + r() * 0.038 * intensity).toFixed(3);
+            const sy = (1 + r() * 0.038 * intensity).toFixed(3);
+            const skew = (r() * 1.6 * intensity).toFixed(2);
+            const mr = (r() * 0.45 * intensity).toFixed(2);
 
-            glyphEl.style.transform = `translateY(${dy}px) rotate(${rot}deg) scale(${sx}, ${sy})`;
+            glyphEl.style.transform = `translateY(${dy}px) rotate(${rot}deg) skewX(${skew}deg) scale(${sx}, ${sy})`;
             glyphEl.style.marginRight = `${mr}px`;
           }
 
@@ -567,15 +625,18 @@ Importance in Software Development:
             const isPunctuation = /[.,!?:;"'()[\]{}]/.test(ch);
             const isStart = chIdx === 0;
             let pressure;
+            let strokeWidth;
 
             if (isPunctuation || isStart) {
-              // Stronger initial pen stroke or punctuation mark
               pressure = 0.94 + glyphRand() * 0.06;
+              strokeWidth = (0.28 * intensity).toFixed(2);
             } else {
-              // Flow fluctuations in middle of words
-              pressure = 0.82 + glyphRand() * 0.16;
+              pressure = 0.80 + glyphRand() * 0.18;
+              strokeWidth = ((0.10 + glyphRand() * 0.18) * intensity).toFixed(2);
             }
             glyphEl.style.opacity = Math.min(1.0, pressure).toFixed(2);
+            glyphEl.style.webkitTextStroke = `${strokeWidth}px currentColor`;
+            glyphEl.style.textShadow = `0 0 ${(0.22 + glyphRand() * 0.32).toFixed(2)}px currentColor`;
           }
 
           wordEl.appendChild(glyphEl);
@@ -712,11 +773,19 @@ Importance in Software Development:
     }
 
     // 2. Student Assignment Header
-    let headerBottomY = (45 / 25.4) * 300;
+    const isSpiral = state.pageStyle === "spiral";
+    const nbX = isSpiral ? 140 : 0;
+    const nbY = isSpiral ? 60 : 0;
+    const nbW = isSpiral ? (canvas.width - 200) : canvas.width;
+    const nbH = isSpiral ? (canvas.height - 120) : canvas.height;
+
+    const marginLineX = isSpiral ? (nbX + marginPx + 40) : marginPx;
+    let headerBottomY = isSpiral ? (nbY + (35 / 25.4) * 300) : ((40 / 25.4) * 300);
+
     if (state.headerEnabled) {
-      const hdrX = marginPx + 40;
-      const hdrW = canvas.width - hdrX - (18 / 25.4) * 300;
-      const hdrTop = (15 / 25.4) * 300;
+      const hdrX = marginLineX + (isSpiral ? 20 : 40);
+      const hdrW = isSpiral ? (nbX + nbW - hdrX - 40) : (canvas.width - hdrX - (18 / 25.4) * 300);
+      const hdrTop = isSpiral ? (nbY + 25) : ((14 / 25.4) * 300);
 
       ctx.save();
       ctx.font = `600 ${12 * scale}px 'Inter', sans-serif`;
@@ -738,7 +807,7 @@ Importance in Software Development:
 
       ctx.fillText(state.headerInfo.subject, hdrX + 105, hdrTop + 90);
       ctx.fillText(state.headerInfo.assignment, hdrX + hdrW * 0.38 + 140, hdrTop + 90);
-      ctx.fillText(`${pageIndex + 1} of 10`, hdrX + hdrW * 0.72 + 65, hdrTop + 90);
+      ctx.fillText(`${pageIndex + 1} of ${Math.max(1, state.paginatedPages.length)}`, hdrX + hdrW * 0.72 + 65, hdrTop + 90);
 
       // Header bottom border
       ctx.strokeStyle = "#ef4444";
@@ -752,24 +821,28 @@ Importance in Software Development:
       headerBottomY = hdrTop + 130;
     }
 
-    // 3. Draw Ruled Lines and Margin Line
+    // 3. Draw Ruled Lines and Red Margin Line
     if (state.pageStyle !== "blank") {
-      // Red vertical margin line
       ctx.save();
+      // Red vertical margin line — strictly inside paper bounds
       ctx.strokeStyle = "#ef4444";
       ctx.lineWidth = 1.5 * scale;
       ctx.beginPath();
-      ctx.moveTo(marginPx, 0);
-      ctx.lineTo(marginPx, canvas.height);
+      ctx.moveTo(marginLineX, isSpiral ? nbY : 0);
+      ctx.lineTo(marginLineX, isSpiral ? (nbY + nbH) : canvas.height);
       ctx.stroke();
 
-      // Blue horizontal ruled lines
+      // Blue horizontal ruled lines — strictly inside paper bounds
       ctx.strokeStyle = "#9cbde8";
       ctx.lineWidth = 1.0 * scale;
-      for (let y = headerBottomY; y < canvas.height - 100; y += rulePitchPx) {
+      const ruledStartX = isSpiral ? (nbX + 15) : 0;
+      const ruledEndX = isSpiral ? (nbX + nbW - 15) : canvas.width;
+      const ruledLimitY = isSpiral ? (nbY + nbH - 60) : (canvas.height - 100);
+
+      for (let y = headerBottomY + rulePitchPx; y < ruledLimitY; y += rulePitchPx) {
         ctx.beginPath();
-        ctx.moveTo(state.pageStyle === "spiral" ? 140 : 0, y);
-        ctx.lineTo(canvas.width, y);
+        ctx.moveTo(ruledStartX, y);
+        ctx.lineTo(ruledEndX, y);
         ctx.stroke();
       }
       ctx.restore();
@@ -778,26 +851,30 @@ Importance in Software Development:
     // 4. Render Handwritten Text on Ruled Lines
     const raw = state.paginatedPages[pageIndex] || "";
     const lines = raw.split(/\r?\n/);
-    const startX = marginPx + (state.pageStyle === "blank" ? 0 : 40);
-    const textStartY = headerBottomY + rulePitchPx;
-
+    const startX = isSpiral ? (marginLineX + 24) : (marginPx + (state.pageStyle === "blank" ? 0 : 40));
+    const textStartY = headerBottomY;
     const baseSeed = hashStr(raw) ^ ((pageIndex + 1) * 0x9e3779b9);
 
     ctx.save();
     ctx.fillStyle = state.inkColor;
     ctx.textBaseline = "alphabetic";
 
+    const charOccurrences = {};
+
     lines.forEach((lineText, lineIdx) => {
-      const lineY = textStartY + lineIdx * rulePitchPx;
-      if (lineY > canvas.height - 150) return; // avoid drawing off page
+      // Align text baseline exactly to ruled line
+      const lineY = textStartY + (lineIdx + 1) * rulePitchPx - (2 * scale);
+      if (lineY > (isSpiral ? (nbY + nbH - 70) : (canvas.height - 120))) return;
 
       let curX = startX;
 
-      // Natural movement: line start drift
+      // Natural movement: line start drift & line spacing jitter
+      let lineSpacingJitter = 0;
       if (state.naturalMovement) {
         const lineRand = mulberry32(baseSeed + lineIdx * 1337);
         const lineDrift = (Math.sin(lineIdx * 0.45) * 3.5 + (lineRand() - 0.5) * 3.0) * state.realismIntensity * scale;
         curX += Math.max(0, lineDrift);
+        lineSpacingJitter = (lineRand() - 0.5) * 1.6 * state.realismIntensity * scale;
       }
 
       const words = lineText.split(" ");
@@ -805,42 +882,53 @@ Importance in Software Development:
         // Natural movement: baseline wobble & word spacing
         let wobbleY = 0;
         if (state.naturalMovement) {
-          wobbleY = Math.sin((lineIdx * 2.5 + wordIdx) * 0.7) * 1.4 * state.realismIntensity * scale;
+          wobbleY = Math.sin((lineIdx * 2.5 + wordIdx) * 0.7) * 1.3 * state.realismIntensity * scale;
         }
 
         for (let chIdx = 0; chIdx < word.length; chIdx++) {
           const ch = word[chIdx];
-          const glyphSeed = baseSeed + (lineIdx * 1000) + (wordIdx * 50) + (chIdx * 7) + ch.charCodeAt(0);
+          const occ = (charOccurrences[ch] = (charOccurrences[ch] || 0) + 1);
+          const glyphSeed = baseSeed + (lineIdx * 7919) + (wordIdx * 499) + (chIdx * 31) + (occ * 1337) + ch.charCodeAt(0);
           const glyphRand = mulberry32(glyphSeed);
 
           let rot = 0;
           let dy = 0;
           let sx = 1;
           let sy = 1;
+          let skew = 0;
 
           if (state.varyLetters) {
             const r = () => (glyphRand() - 0.5) * 2;
-            rot = (r() * 2.2 * state.realismIntensity * Math.PI) / 180;
+            rot = (r() * 2.4 * state.realismIntensity * Math.PI) / 180;
             dy = r() * 1.1 * state.realismIntensity * scale;
-            sx = 1 + r() * 0.035 * state.realismIntensity;
-            sy = 1 + r() * 0.035 * state.realismIntensity;
+            sx = 1 + r() * 0.038 * state.realismIntensity;
+            sy = 1 + r() * 0.038 * state.realismIntensity;
+            skew = (r() * 1.6 * state.realismIntensity * Math.PI) / 180;
           }
 
+          let pressure = 1.0;
           if (state.inkflow) {
             const isPunctuation = /[.,!?:;"'()[\]{}]/.test(ch);
             const isStart = chIdx === 0;
-            const pressure = (isPunctuation || isStart) ? (0.94 + glyphRand() * 0.06) : (0.82 + glyphRand() * 0.16);
+            pressure = (isPunctuation || isStart) ? (0.94 + glyphRand() * 0.06) : (0.80 + glyphRand() * 0.18);
             ctx.globalAlpha = Math.min(1.0, pressure);
           } else {
             ctx.globalAlpha = 1.0;
           }
 
           ctx.save();
-          ctx.translate(curX, lineY - (4 * scale) + wobbleY + dy);
+          ctx.translate(curX, lineY + wobbleY + lineSpacingJitter + dy);
           if (rot !== 0) ctx.rotate(rot);
+          if (skew !== 0) ctx.transform(1, 0, Math.tan(skew), 1, 0, 0);
           if (sx !== 1 || sy !== 1) ctx.scale(sx, sy);
           ctx.font = `${fontSizePx}px "${state.fontFamily}", cursive`;
           ctx.fillText(ch, 0, 0);
+
+          // Inkflow fiber bleed simulation for heavy strokes
+          if (state.inkflow && pressure > 0.90) {
+            ctx.globalAlpha = 0.16;
+            ctx.fillText(ch, 0.4, 0.4);
+          }
           ctx.restore();
 
           const glyphWidth = ctx.measureText(ch).width;
@@ -849,19 +937,21 @@ Importance in Software Development:
 
         // Space between words
         const spaceRand = mulberry32(baseSeed + lineIdx * 100 + wordIdx * 17);
-        const spaceW = (0.34 + spaceRand() * 0.18 * state.realismIntensity) * fontSizePx;
+        const spaceW = (0.34 + spaceRand() * 0.20 * state.realismIntensity) * fontSizePx;
         curX += spaceW;
       });
     });
 
     ctx.restore();
 
-    // 5. Draw Page Number Footer
+    // 5. Draw Page Number Footer — strictly inside paper bounds
     ctx.save();
     ctx.font = `${14 * scale}px "${state.fontFamily}", cursive`;
     ctx.fillStyle = "#64748b";
     ctx.textAlign = "right";
-    ctx.fillText(`Page ${pageIndex + 1}`, canvas.width - (18 / 25.4) * 300, canvas.height - 40);
+    const footerX = isSpiral ? (nbX + nbW - 60) : (canvas.width - (18 / 25.4) * 300);
+    const footerY = isSpiral ? (nbY + nbH - 30) : (canvas.height - 40);
+    ctx.fillText(`Page ${pageIndex + 1}`, footerX, footerY);
     ctx.restore();
 
     return canvas;

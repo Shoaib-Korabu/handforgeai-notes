@@ -491,6 +491,11 @@ html, body {
   transition: border-color 0.15s ease;
 }
 
+.realism-toggle-item:hover,
+.realism-toggle-item:focus-within {
+  border-color: #93c5fd;
+}
+
 .realism-toggle-item.highlight-border {
   border: 2px solid #2563eb;
   background: #f8faff;
@@ -932,20 +937,7 @@ html, body {
 }
 
 .page.ruled::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  /* Horizontal blue ruled lines */
-  background-image: repeating-linear-gradient(
-    to bottom,
-    transparent 0,
-    transparent calc(var(--rule-height) - 1px),
-    var(--rule-color) calc(var(--rule-height) - 1px),
-    var(--rule-color) var(--rule-height)
-  );
-  background-position: 0 45mm; /* Starts right below student header */
-  z-index: 1;
-  pointer-events: none;
+  display: none !important;
 }
 
 /* Red Margin Line */
@@ -973,19 +965,7 @@ html, body {
 }
 
 .page.spiral::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: repeating-linear-gradient(
-    to bottom,
-    transparent 0,
-    transparent calc(var(--rule-height) - 1px),
-    #adc6e5 calc(var(--rule-height) - 1px),
-    #adc6e5 var(--rule-height)
-  );
-  background-position: 0 45mm;
-  z-index: 1;
-  pointer-events: none;
+  display: none !important;
 }
 
 /* Inner spine curvature shadow for notebook */
@@ -1005,10 +985,10 @@ html, body {
 .spiral-binding {
   display: none;
   position: absolute;
-  top: 15mm;
-  bottom: 15mm;
-  left: -14px;
-  width: 32px;
+  top: 14mm;
+  bottom: 14mm;
+  left: -16px;
+  width: 44px;
   z-index: 10;
   pointer-events: none;
   flex-direction: column;
@@ -1019,34 +999,38 @@ html, body {
   display: flex;
 }
 
+.page.spiral .page-margin-line {
+  left: calc(var(--margin-left) + 4mm);
+}
+
 .spiral-ring-item {
   position: relative;
-  width: 32px;
+  width: 44px;
   height: 14px;
   display: flex;
   align-items: center;
 }
 
-/* Punch Hole in paper */
+/* Punch Hole in paper — sits 8px inside the notebook page edge */
 .spiral-hole {
   position: absolute;
-  left: 14px;
-  width: 10px;
-  height: 10px;
+  left: 24px;
+  width: 11px;
+  height: 11px;
   background: #1e140d;
   border-radius: 50%;
-  box-shadow: inset 1px 1px 2px rgba(0,0,0,0.8);
+  box-shadow: inset 1px 1px 2px rgba(0,0,0,0.9);
 }
 
-/* 3D Wire Loop */
+/* 3D Wire Loop wrapping around spine through the hole */
 .spiral-loop {
   position: absolute;
   left: 0;
-  width: 28px;
-  height: 8px;
-  border-radius: 8px;
+  width: 36px;
+  height: 9px;
+  border-radius: 6px;
   background: linear-gradient(180deg, #9ca3af 0%, #f3f4f6 35%, #4b5563 70%, #1f2937 100%);
-  box-shadow: 2px 3px 3px rgba(0,0,0,0.35);
+  box-shadow: 2px 3px 4px rgba(0,0,0,0.35);
   transform: rotate(-10deg);
 }
 
@@ -1102,18 +1086,39 @@ html, body {
 .page-text {
   position: relative;
   z-index: 4;
-  padding-top: 8px;
+  margin-top: 0;
+  padding-top: 0;
   padding-right: var(--margin-right);
   padding-bottom: var(--margin-bottom);
   padding-left: calc(var(--margin-left) + 4mm);
   font-family: var(--font-family);
   font-size: var(--font-size);
   color: var(--ink);
-  min-height: 200mm;
+  min-height: 220mm;
+  box-sizing: border-box;
+}
+
+/* Mathematical ruled lines repeating in perfect phase on page-text */
+.page.ruled .page-text,
+.page.spiral .page-text {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(var(--rule-height) - 1px),
+    var(--rule-color) calc(var(--rule-height) - 1px),
+    var(--rule-color) var(--rule-height)
+  );
+  background-position: 0 0;
+  background-repeat: repeat-y;
 }
 
 .page.blank .page-text {
+  background-image: none;
   padding-left: var(--margin-left);
+}
+
+.page.spiral .page-text {
+  padding-left: calc(var(--margin-left) + 8mm);
 }
 
 /* Each line of handwriting */
@@ -1123,10 +1128,12 @@ html, body {
   line-height: var(--rule-height);
   display: flex;
   align-items: flex-end;
-  padding-bottom: 3px;
+  align-items: baseline;
+  padding-top: calc(var(--rule-height) - var(--font-size) * 1.08);
   white-space: pre;
   box-sizing: border-box;
   position: relative;
+  overflow: visible;
 }
 
 /* Realism: Empty lines still keep exact rule-height pitch */
@@ -1137,7 +1144,7 @@ html, body {
 /* Realism: Word container for baseline wobble & variable spacing */
 .hand-word {
   display: inline-flex;
-  align-items: flex-end;
+  align-items: baseline;
   margin-right: var(--word-space, 0.38em);
   position: relative;
 }
@@ -1151,7 +1158,7 @@ html, body {
 
 /* Realism: Inkflow subtle bleed effect */
 .inkflow-enabled .hand-glyph {
-  text-shadow: 0 0 0.25px currentColor;
+  text-shadow: 0 0 0.35px currentColor;
 }
 
 /* Page Footer */

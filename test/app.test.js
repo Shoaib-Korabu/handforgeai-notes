@@ -135,4 +135,17 @@ describe('HandTextAI v0.1 Test Suite', () => {
     }
   });
 
+  test('Font-accurate Word Wrapping & Unbreakable Token Handling', () => {
+    assert.ok(script.includes('measureStringWidth'), 'Script must have string width measurement');
+    assert.ok(script.includes('getUsableLineWidthPx'), 'Script must calculate usable line width');
+    assert.ok(script.includes('FONT_WIDTH_FACTORS'), 'Script must have font-specific width factors');
+  });
+
+  test('Spiral Notebook Canvas Protection and Geometry', () => {
+    assert.ok(script.includes('isSpiral ? 140 : 0'), 'Canvas must account for spiral offset');
+    assert.ok(script.includes('ruledStartX = isSpiral ? (nbX + 15) : 0'), 'Ruled lines must be clipped inside notebook');
+    assert.ok(script.includes('footerX = isSpiral ? (nbX + nbW - 60)'), 'Footer must be placed inside notebook');
+  });
+
 });
+
