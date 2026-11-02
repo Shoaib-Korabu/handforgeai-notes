@@ -25,6 +25,12 @@
       </div>
     </div>
     <div class="top-actions">
+      <button id="btn-top-demo-iot" type="button" class="btn btn-secondary btn-demo-glow" title="Load Assignment 3 Solutions: Cyber Security in IoT (3-Page Demo)">
+        <span class="btn-icon">⚡</span> Load IoT Demo Assignment
+      </button>
+      <button id="btn-top-upload-doc" type="button" class="btn btn-secondary" title="Upload assignment from Word, PDF, or text document">
+        <span class="btn-icon">📁</span> Upload Doc
+      </button>
       <button id="btn-top-template" type="button" class="btn btn-secondary" title="Insert formatted Assignment Q&A template">
         <span class="btn-icon">📋</span> Insert Q&A
       </button>
@@ -86,6 +92,9 @@
         </div>
 
         <div class="action-row">
+          <button id="btn-upload-doc" type="button" class="btn-text btn-text-primary" title="Upload assignment as document (.docx, .pdf, .txt, .md)">
+            <span>📁</span> Upload Doc
+          </button>
           <button id="btn-insert-template" type="button" class="btn-text" title="Replace content with sample Q&A">
             <span>📝</span> Insert Q&A Template
           </button>
@@ -114,15 +123,15 @@
           </div>
           <div>
             <label for="hdr-roll">Roll No / ID</label>
-            <input id="hdr-roll" type="text" value="SE-2026-042" placeholder="e.g. CS-2024-089">
+            <input id="hdr-roll" type="text" value="CS-2026-089" placeholder="e.g. CS-2024-089">
           </div>
           <div>
             <label for="hdr-subject">Subject</label>
-            <input id="hdr-subject" type="text" value="Software Engineering" placeholder="e.g. Distributed Systems">
+            <input id="hdr-subject" type="text" value="Cyber Security in IoT" placeholder="e.g. Distributed Systems">
           </div>
           <div>
             <label for="hdr-assignment">Assignment Title</label>
-            <input id="hdr-assignment" type="text" value="Assignment 2" placeholder="e.g. Assignment #1">
+            <input id="hdr-assignment" type="text" value="Assignment 3 Solutions" placeholder="e.g. Assignment #1">
           </div>
           <div class="grid-col-span-2">
             <label for="hdr-date">Submission Date</label>
@@ -266,7 +275,7 @@
           </div>
           <div>
             <label for="rule-height">Line Pitch / Snapping <span id="rule-height-val">34</span>px</label>
-            <input id="rule-height" type="range" min="28" max="44" value="34">
+            <input id="rule-height" type="range" min="20" max="44" value="34">
           </div>
         </div>
 
@@ -344,14 +353,14 @@
             <!-- Page Student Information Header -->
             <header id="page-header" class="page-header">
               <div class="header-top-row">
-                <div class="hdr-cell"><span class="hdr-label">NAME:</span> <span id="ph-name" class="hdr-value">Alex Chen</span></div>
-                <div class="hdr-cell"><span class="hdr-label">ROLL NO:</span> <span id="ph-roll" class="hdr-value">CS-2024-089</span></div>
+                <div class="hdr-cell"><span class="hdr-label">NAME:</span> <span id="ph-name" class="hdr-value">Shoaib Korabu</span></div>
+                <div class="hdr-cell"><span class="hdr-label">ROLL NO:</span> <span id="ph-roll" class="hdr-value">CS-2026-089</span></div>
                 <div class="hdr-cell"><span class="hdr-label">DATE:</span> <span id="ph-date" class="hdr-value">November 2, 2026</span></div>
               </div>
               <div class="header-bottom-row">
-                <div class="hdr-cell"><span class="hdr-label">SUBJECT:</span> <span id="ph-subject" class="hdr-value">Distributed Systems</span></div>
-                <div class="hdr-cell"><span class="hdr-label">ASSIGNMENT:</span> <span id="ph-assignment" class="hdr-value">Assignment #1</span></div>
-                <div class="hdr-cell"><span class="hdr-label">PAGE:</span> <span id="ph-page" class="hdr-value">1 of 10</span></div>
+                <div class="hdr-cell"><span class="hdr-label">SUBJECT:</span> <span id="ph-subject" class="hdr-value">Cyber Security in IoT</span></div>
+                <div class="hdr-cell"><span class="hdr-label">ASSIGNMENT:</span> <span id="ph-assignment" class="hdr-value">Assignment 3 Solutions</span></div>
+                <div class="hdr-cell"><span class="hdr-label">PAGE:</span> <span id="ph-page" class="hdr-value">1 of 3</span></div>
               </div>
             </header>
 
@@ -375,8 +384,58 @@
     </section>
   </main>
 
+  <!-- Document Upload Modal -->
+  <div id="upload-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <span class="modal-icon">📁</span>
+          <h3 id="modal-title">Upload Assignment Document</h3>
+        </div>
+        <button id="btn-close-modal" type="button" class="modal-close-btn" title="Close dialog" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-intro">Upload your assignment file. Text is extracted cleanly on your device and populated with auto-pagination into realistic handwriting.</p>
+        
+        <div id="drop-zone" class="drop-zone" tabindex="0" role="button" aria-label="File upload dropzone">
+          <div class="drop-zone-icon">📥</div>
+          <p class="drop-zone-primary">Drag & drop your file here, or <span class="drop-zone-link">browse</span></p>
+          <p class="drop-zone-sub">Supports <strong>.docx</strong>, <strong>.pdf</strong>, <strong>.txt</strong>, and <strong>.md</strong> (Max 25 MB)</p>
+          <div class="format-badges">
+            <span class="format-badge">Word (.docx)</span>
+            <span class="format-badge">PDF (.pdf)</span>
+            <span class="format-badge">Markdown (.md)</span>
+            <span class="format-badge">Text (.txt)</span>
+          </div>
+          <input type="file" id="doc-file-input" class="hidden-file-input" accept=".docx,.pdf,.txt,.md,text/plain,text/markdown,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+        </div>
+
+        <!-- Upload Status & Feedback Area -->
+        <div id="upload-status" class="upload-status hidden" role="status" aria-live="polite">
+          <div class="status-indicator">
+            <div id="status-spinner" class="spinner hidden"></div>
+            <span id="status-icon" class="status-icon">ℹ️</span>
+            <span id="status-text" class="status-text">Processing document...</span>
+          </div>
+        </div>
+
+        <!-- Quick 1-click Demo Shortcut inside Modal -->
+        <div class="modal-demo-banner">
+          <span class="demo-badge">Quick Demo</span>
+          <span>Try the university assignment:</span>
+          <button id="btn-modal-demo-iot" type="button" class="btn-text-accent">Load IoT Assignment (3 Pages) &rarr;</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-cancel-modal" type="button" class="btn btn-secondary">Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- External Libraries & Main Application Script -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

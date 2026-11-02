@@ -84,12 +84,85 @@ Importance in Software Development:
 2. Improves code readability, testability, and long-term maintainability.
 3. Ensures consistent quality across development teams.`;
 
+  // University Demo Assignment 3: Cyber Security in IoT (3 full pages with explicit page breaks)
+  const IOT_DEMO_CONTENT = `Assignment 3 Solutions: Cyber Security in IoT
+
+Question 1: Explain the importance of cybersecurity in IoT and discuss major security challenges.
+
+Importance of Cybersecurity in IoT:
+• Data Protection: Safeguards personal, medical, financial, and industrial data from unauthorized access, interception, and theft.
+• Lateral Movement Mitigation: Prevents compromised IoT endpoints (e.g., smart thermostats) from acting as entry gateways to breach critical corporate or private networks.
+• Physical Safety & Operational Resilience: Prevents disruption to real-world infrastructure, medical systems, smart power grids, and automated industrial plants.
+
+Major Security Challenges:
+• Network Invisibility: Unmanaged devices join networks automatically without central monitoring or security inventory tracking.
+• Scale and Heterogeneity: Billions of diverse devices across multiple industries hinder the use of a single, standardized security protocol.
+• Resource Constraints: Low processing power, limited memory, and small battery life restrict advanced built-in encryption and endpoint protection.
+• User Awareness & Default Credentials: Widespread reliance on unchanged default passwords and neglected firmware updates exposes systems to automated exploits.
+
+Question 2: Describe the CIA Triad (Confidentiality, Integrity, Availability) in the context of IoT with examples.
+
+Confidentiality in IoT:
+• Concept: Ensures private sensor data, camera feeds, and credentials remain accessible only to authorized users.
+• Challenge: Unencrypted transmission over public networks and weak default authentication.
+• Example & Solution: Encrypting medical telemetry and surveillance feeds using AES encryption and Multi-Factor Authentication (MFA).
+
+Integrity in IoT:
+• Concept: Guarantees sensor readings, control logic, and telemetry remain accurate and unaltered during storage and transit.
+• Challenge: Unpatched firmware allowing hackers to tamper with control signals or inject fake sensor inputs.
+• Example & Solution: Applying cryptographic hashing, digital signatures, and secure boot to prevent unauthorized control command tampering in smart grids.
+
+Availability in IoT:
+• Concept: Ensures IoT devices, gateways, and cloud control systems remain continuously accessible and operational.
+• Challenge: Botnets launching Distributed Denial of Service (DDoS) floods or hardware/power outages.
+• Example & Solution: Deploying rate-limiting, traffic monitoring, and redundant failovers to keep industrial automation systems online during DDoS attacks.
+\fQuestion 3: Explain the IoT attack surface and identify potential risks in connected devices.
+
+Three Layers of the IoT Attack Surface:
+• Device Layer: Physical hardware and firmware. Risks include exposed debugging ports (JTAG/UART), weak default credentials, and unencrypted local storage.
+• Network Layer: Communication protocols and transport media. Risks include unencrypted protocols (HTTP/Telnet), open network ports, weak Wi-Fi security, and Man-in-the-Middle (MitM) interception.
+• Cloud & Application Layer: Mobile apps, web management portals, and cloud APIs. Risks include weak session management, insecure APIs, and unauthenticated administrative interfaces.
+
+Potential Risks in Connected Devices:
+• Unencrypted Data Transmission: Cleartext traffic exposure allowing password sniffing and data theft.
+• Outdated Firmware: Unpatched, known vulnerabilities remaining exploitable indefinitely.
+• Botnet Recruitment: Compromised endpoints weaponized into massive DDoS attack fleets.
+• Lateral Network Pivoting: Exploiting an IoT device to access connected computers and servers on the same network.
+
+Question 4: Discuss data privacy issues in IoT and suggest methods to improve privacy protection.
+
+Data Privacy Issues in IoT:
+• Continuous Data Collection: Constant, real-time tracking of location, health metrics, audio, and personal habits.
+• Unexpected Profiling: Aggregating data across multiple devices reveals intimate lifestyle patterns (e.g., smart meter usage revealing sleep and home occupancy schedules).
+• Unprotected Transmission & Storage: Unencrypted sensor data intercepted in transit or exposed via vulnerable cloud backends.
+• Lack of Consent & Transparency: Constrained device UI prevents clear user notification regarding data collection, sharing, and commercial monetization.
+
+Methods to Improve Privacy Protection:
+• Privacy by Design: Integrating privacy architecture into devices at the initial engineering phase.
+• Data Minimization: Collecting and storing strictly the minimum data required for device operation.
+• Strong Encryption & Authentication: Mandating end-to-end AES encryption and Multi-Factor Authentication (MFA).
+• Clear Consent & Transparency: Providing explicit privacy notifications and accessible user opt-out choices.
+• Network Segmentation: Isolating privacy-sensitive devices on dedicated VLANs or guest networks.
+
+Question 5: Explain the security requirements of IoT systems and justify the importance of secure IoT design.
+
+Security Requirements across IoT Layers:
+• Device Layer: Unique device identities, secure boot, tamper resistance, and disabled JTAG/UART debugging ports.
+• Network Layer: Encrypted transport protocols (TLS/DTLS), network segmentation, and active intrusion monitoring.
+• Cloud & Application Layer: Role-Based Access Control (RBAC), digitally signed OTA updates, and Software Bill of Materials (SBOM).
+• Core Attributes: Confidentiality, Integrity, Availability, Authenticity, Non-Repudiation, and Privacy.
+\fJustification for Secure IoT Design:
+• Proactive Threat Mitigation: Builds security directly into hardware and software, eliminating vulnerabilities prior to mass deployment.
+• Attack Surface Reduction: Disabling unused ports, remote management services, and default credentials minimizes exploitation vectors.
+• Protection of Safety & Privacy: Ensures reliable operation in safety-critical sectors (healthcare, transportation, smart grids).
+• Regulatory Compliance: Meets global cybersecurity mandates (ETSI EN 303 645, NISTIR 8259, EU Cyber Resilience Act, US IoT Cybersecurity Improvement Act).`;
+
   const PAGE_BREAK = "\f"; // explicit page-break sentinel inserted by "⏎ New Page" button
   const MAX_PAGES = 10;
 
   // Application State — single flowing content + computed paginated pages.
   const state = {
-    content: DEFAULT_CONTENT,
+    content: IOT_DEMO_CONTENT,
     paginatedPages: [""],     // computed by paginate(); never written to directly
     currentPage: 0,           // index into paginatedPages for the preview
     
@@ -114,9 +187,9 @@ Importance in Software Development:
     headerEnabled: true,
     headerInfo: {
       name: "Shoaib Korabu",
-      roll: "SE-2026-042",
-      subject: "Software Engineering",
-      assignment: "Assignment 2",
+      roll: "CS-2026-089",
+      subject: "Cyber Security in IoT",
+      assignment: "Assignment 3 Solutions",
       date: "November 2, 2026"
     },
 
@@ -176,6 +249,21 @@ Importance in Software Development:
     btnExportPdf: document.getElementById("btn-export-pdf"),
     btnExportAllPdf: document.getElementById("btn-export-all-pdf"),
     btnExportPng: document.getElementById("btn-export-png"),
+
+    // Document Upload & IoT Demo
+    btnTopUploadDoc: document.getElementById("btn-top-upload-doc"),
+    btnTopDemoIot: document.getElementById("btn-top-demo-iot"),
+    btnUploadDoc: document.getElementById("btn-upload-doc"),
+    uploadModal: document.getElementById("upload-modal"),
+    btnCloseModal: document.getElementById("btn-close-modal"),
+    btnCancelModal: document.getElementById("btn-cancel-modal"),
+    dropZone: document.getElementById("drop-zone"),
+    docFileInput: document.getElementById("doc-file-input"),
+    uploadStatus: document.getElementById("upload-status"),
+    statusSpinner: document.getElementById("status-spinner"),
+    statusIcon: document.getElementById("status-icon"),
+    statusText: document.getElementById("status-text"),
+    btnModalDemoIot: document.getElementById("btn-modal-demo-iot"),
 
     // Preview
     previewPanel: document.getElementById("preview-panel"),
@@ -242,10 +330,14 @@ Importance in Software Development:
   function measureStringWidth(text, fontSpec) {
     if (typeof document !== "undefined" && document.createElement) {
       if (!_measureCtx) {
-        const c = document.createElement("canvas");
-        _measureCtx = c.getContext("2d");
+        try {
+          const c = document.createElement("canvas");
+          _measureCtx = (c && typeof c.getContext === "function") ? c.getContext("2d") : null;
+        } catch (e) {
+          _measureCtx = null;
+        }
       }
-      if (_measureCtx) {
+      if (_measureCtx && typeof _measureCtx.measureText === "function") {
         _measureCtx.font = fontSpec;
         return _measureCtx.measureText(text).width;
       }
@@ -264,12 +356,69 @@ Importance in Software Development:
     return usableMm * 3.7795; // 96 DPI: 1mm = 3.7795px
   }
 
+  function wrapTextToLines(text, usableWidthPx, fontSpec) {
+    const paragraphs = String(text || "").split("\n");
+    const resultLines = [];
+    for (let p = 0; p < paragraphs.length; p++) {
+      const para = paragraphs[p];
+      if (para === "") {
+        resultLines.push("");
+        continue;
+      }
+      let curLine = "";
+      let curW = 0;
+      const words = para.split(/( )/);
+      for (const token of words) {
+        if (token === "") continue;
+        const tokenWidth = measureStringWidth(token, fontSpec);
+        if (tokenWidth > usableWidthPx && token !== " ") {
+          for (let c = 0; c < token.length; c++) {
+            const ch = token[c];
+            const chW = measureStringWidth(ch, fontSpec);
+            if (curW + chW > usableWidthPx && curW > 0) {
+              resultLines.push(curLine);
+              curLine = "";
+              curW = 0;
+            }
+            curLine += ch;
+            curW += chW;
+          }
+          continue;
+        }
+
+        if (curW + tokenWidth > usableWidthPx && curW > 0) {
+          resultLines.push(curLine);
+          curLine = "";
+          curW = 0;
+        }
+        curLine += token;
+        curW += tokenWidth;
+      }
+      if (curLine.length > 0 || para === "") {
+        resultLines.push(curLine);
+      }
+    }
+    return resultLines.join("\n");
+  }
+
   function paginate(content) {
-    const linesPerPage = computeLinesPerPage();
     const usableWidthPx = getUsableLineWidthPx();
     const fontSpec = `${state.fontSize}px "${state.fontFamily}", cursive`;
+    const sections = String(content || "").split(PAGE_BREAK);
 
-    const sections = String(content).split(PAGE_BREAK);
+    // If explicit page break markers exist, respect each section as an explicit page
+    if (sections.length > 1) {
+      const pages = [];
+      for (let s = 0; s < sections.length; s++) {
+        if (pages.length >= MAX_PAGES) break;
+        const wrapped = wrapTextToLines(sections[s], usableWidthPx, fontSpec);
+        pages.push(wrapped.replace(/\n+$/, ""));
+      }
+      return pages.length > 0 ? pages : [""];
+    }
+
+    // Natural flowing pagination when no explicit page breaks exist
+    const linesPerPage = computeLinesPerPage();
     const pages = [];
     let page = "";
     let lineCount = 0;
@@ -282,58 +431,54 @@ Importance in Software Development:
       currentLineWidth = 0;
     };
 
-    for (let s = 0; s < sections.length; s++) {
-      if (s > 0) pushPage(); // explicit page break
-
-      const paragraphs = sections[s].split("\n");
-      for (let p = 0; p < paragraphs.length; p++) {
-        if (p > 0) {
-          page += "\n";
-          if (currentLineWidth > 0) lineCount++;
-          currentLineWidth = 0;
-        }
-        if (lineCount >= linesPerPage) pushPage();
-
-        const words = paragraphs[p].split(/( )/); // keep spaces as tokens
-        for (const token of words) {
-          if (token === "") continue;
-          const tokenWidth = measureStringWidth(token, fontSpec);
-
-          // If a single word/token exceeds the entire line width (e.g. long equation or URL), break it cleanly
-          if (tokenWidth > usableWidthPx && token !== " ") {
-            for (let c = 0; c < token.length; c++) {
-              const ch = token[c];
-              const chW = measureStringWidth(ch, fontSpec);
-              if (currentLineWidth + chW > usableWidthPx && currentLineWidth > 0) {
-                lineCount++;
-                currentLineWidth = 0;
-                page += "\n";
-                if (lineCount >= linesPerPage) pushPage();
-              }
-              page += ch;
-              currentLineWidth += chW;
-            }
-            continue;
-          }
-
-          if (currentLineWidth + tokenWidth > usableWidthPx && currentLineWidth > 0) {
-            lineCount++;
-            currentLineWidth = 0;
-            page += "\n";
-            if (lineCount >= linesPerPage) pushPage();
-          }
-
-          page += token;
-          currentLineWidth += tokenWidth;
-        }
-      }
-
-      if (currentLineWidth > 0) {
-        lineCount++;
+    const paragraphs = sections[0].split("\n");
+    for (let p = 0; p < paragraphs.length; p++) {
+      if (p > 0) {
+        page += "\n";
+        if (currentLineWidth > 0) lineCount++;
         currentLineWidth = 0;
       }
       if (lineCount >= linesPerPage) pushPage();
+
+      const words = paragraphs[p].split(/( )/); // keep spaces as tokens
+      for (const token of words) {
+        if (token === "") continue;
+        const tokenWidth = measureStringWidth(token, fontSpec);
+
+        // If a single word/token exceeds the entire line width (e.g. long equation or URL), break it cleanly
+        if (tokenWidth > usableWidthPx && token !== " ") {
+          for (let c = 0; c < token.length; c++) {
+            const ch = token[c];
+            const chW = measureStringWidth(ch, fontSpec);
+            if (currentLineWidth + chW > usableWidthPx && currentLineWidth > 0) {
+              lineCount++;
+              currentLineWidth = 0;
+              page += "\n";
+              if (lineCount >= linesPerPage) pushPage();
+            }
+            page += ch;
+            currentLineWidth += chW;
+          }
+          continue;
+        }
+
+        if (currentLineWidth + tokenWidth > usableWidthPx && currentLineWidth > 0) {
+          lineCount++;
+          currentLineWidth = 0;
+          page += "\n";
+          if (lineCount >= linesPerPage) pushPage();
+        }
+
+        page += token;
+        currentLineWidth += tokenWidth;
+      }
     }
+
+    if (currentLineWidth > 0) {
+      lineCount++;
+      currentLineWidth = 0;
+    }
+    if (lineCount >= linesPerPage) pushPage();
     if (page.trim().length > 0) pushPage();
     return pages.length > 0 ? pages : [""];
   }
@@ -363,7 +508,7 @@ Importance in Software Development:
   // Load state from localStorage if available
   function loadStoredState() {
     try {
-      const saved = localStorage.getItem("handtextai_state_v1");
+      const saved = localStorage.getItem("handtextai_state_v2");
       if (saved) {
         const parsed = JSON.parse(saved);
         if (typeof parsed.content === "string" && parsed.content.length > 0) {
@@ -392,7 +537,7 @@ Importance in Software Development:
   // Save state to localStorage
   function saveState() {
     try {
-      localStorage.setItem("handtextai_state_v1", JSON.stringify({
+      localStorage.setItem("handtextai_state_v2", JSON.stringify({
         content: state.content,
         headerInfo: state.headerInfo,
         varyLetters: state.varyLetters,
@@ -514,10 +659,22 @@ Importance in Software Development:
     els.pageHeader.classList.toggle("hidden", !state.headerEnabled);
     els.headerFields.classList.toggle("hidden", !state.headerEnabled);
 
+    // Proportionally adjust line pitch & font size if page content exceeds standard line count
+    const rawPage = state.paginatedPages[state.currentPage] || "";
+    const pageLineCount = rawPage ? rawPage.split(/\r?\n/).length : 0;
+    const normalCapacity = 26;
+    let effectiveRuleHeight = state.ruleHeight;
+    let effectiveFontSize = state.fontSize;
+    if (pageLineCount > normalCapacity) {
+      const scaleFactor = Math.min(1.0, normalCapacity / pageLineCount);
+      effectiveRuleHeight = Math.max(16, Math.round(state.ruleHeight * scaleFactor));
+      effectiveFontSize = Math.max(11, Math.round(state.fontSize * scaleFactor));
+    }
+
     // CSS variables
     p.style.setProperty("--font-family", `"${state.fontFamily}", cursive`);
-    p.style.setProperty("--font-size", `${state.fontSize}px`);
-    p.style.setProperty("--rule-height", `${state.ruleHeight}px`);
+    p.style.setProperty("--font-size", `${effectiveFontSize}px`);
+    p.style.setProperty("--rule-height", `${effectiveRuleHeight}px`);
     p.style.setProperty("--ink", state.inkColor);
     p.style.setProperty("--margin-left", `${state.marginMm}mm`);
     p.style.setProperty("--preview-zoom", state.zoom);
@@ -839,7 +996,20 @@ Importance in Software Development:
       const ruledEndX = isSpiral ? (nbX + nbW - 15) : canvas.width;
       const ruledLimitY = isSpiral ? (nbY + nbH - 60) : (canvas.height - 100);
 
-      for (let y = headerBottomY + rulePitchPx; y < ruledLimitY; y += rulePitchPx) {
+      const raw = state.paginatedPages[pageIndex] || "";
+      const lines = raw.split(/\r?\n/);
+
+      // Dynamic rule pitch to prevent any line cutoff on canvas
+      const maxAvailableH = ruledLimitY - headerBottomY - (20 * scale);
+      const neededH = lines.length * rulePitchPx;
+      const actualRulePitch = neededH > maxAvailableH
+        ? Math.max(12 * scale, maxAvailableH / (lines.length + 0.5))
+        : rulePitchPx;
+      const actualFontSize = actualRulePitch < rulePitchPx
+        ? Math.max(10 * scale, fontSizePx * (actualRulePitch / rulePitchPx))
+        : fontSizePx;
+
+      for (let y = headerBottomY + actualRulePitch; y < ruledLimitY; y += actualRulePitch) {
         ctx.beginPath();
         ctx.moveTo(ruledStartX, y);
         ctx.lineTo(ruledEndX, y);
@@ -855,6 +1025,16 @@ Importance in Software Development:
     const textStartY = headerBottomY;
     const baseSeed = hashStr(raw) ^ ((pageIndex + 1) * 0x9e3779b9);
 
+    const ruledLimitY = isSpiral ? (nbY + nbH - 60) : (canvas.height - 100);
+    const maxAvailableH = ruledLimitY - headerBottomY - (20 * scale);
+    const neededH = lines.length * rulePitchPx;
+    const actualRulePitch = neededH > maxAvailableH
+      ? Math.max(12 * scale, maxAvailableH / (lines.length + 0.5))
+      : rulePitchPx;
+    const actualFontSize = actualRulePitch < rulePitchPx
+      ? Math.max(10 * scale, fontSizePx * (actualRulePitch / rulePitchPx))
+      : fontSizePx;
+
     ctx.save();
     ctx.fillStyle = state.inkColor;
     ctx.textBaseline = "alphabetic";
@@ -863,7 +1043,7 @@ Importance in Software Development:
 
     lines.forEach((lineText, lineIdx) => {
       // Align text baseline exactly to ruled line
-      const lineY = textStartY + (lineIdx + 1) * rulePitchPx - (2 * scale);
+      const lineY = textStartY + (lineIdx + 1) * actualRulePitch - (2 * scale);
       if (lineY > (isSpiral ? (nbY + nbH - 70) : (canvas.height - 120))) return;
 
       let curX = startX;
@@ -908,7 +1088,7 @@ Importance in Software Development:
 
           let pressure = 1.0;
           if (state.inkflow) {
-            const isPunctuation = /[.,!?:;"'()[\]{}]/.test(ch);
+            const isPunctuation = /[.,!?:;"'()[\]{}•\-]/.test(ch);
             const isStart = chIdx === 0;
             pressure = (isPunctuation || isStart) ? (0.94 + glyphRand() * 0.06) : (0.80 + glyphRand() * 0.18);
             ctx.globalAlpha = Math.min(1.0, pressure);
@@ -921,7 +1101,7 @@ Importance in Software Development:
           if (rot !== 0) ctx.rotate(rot);
           if (skew !== 0) ctx.transform(1, 0, Math.tan(skew), 1, 0, 0);
           if (sx !== 1 || sy !== 1) ctx.scale(sx, sy);
-          ctx.font = `${fontSizePx}px "${state.fontFamily}", cursive`;
+          ctx.font = `${actualFontSize}px "${state.fontFamily}", cursive`;
           ctx.fillText(ch, 0, 0);
 
           // Inkflow fiber bleed simulation for heavy strokes
@@ -937,7 +1117,7 @@ Importance in Software Development:
 
         // Space between words
         const spaceRand = mulberry32(baseSeed + lineIdx * 100 + wordIdx * 17);
-        const spaceW = (0.34 + spaceRand() * 0.20 * state.realismIntensity) * fontSizePx;
+        const spaceW = (0.34 + spaceRand() * 0.20 * state.realismIntensity) * actualFontSize;
         curX += spaceW;
       });
     });
@@ -1018,6 +1198,278 @@ Importance in Software Development:
       console.error("Export PDF failed:", err);
       alert("PDF generation failed. Using browser print dialog instead.");
       window.print();
+    }
+  }
+
+  // ==========================================================================
+  // DOCUMENT EXTRACTION & UPLOAD (.docx, .pdf, .txt, .md)
+  // ==========================================================================
+
+  // Clean and normalize extracted text
+  function cleanExtractedText(text) {
+    if (typeof text !== "string") return "";
+    return text
+      .replace(/\r\n/g, "\n")
+      .replace(/\r/g, "\n")
+      .replace(/\t/g, "    ")
+      .replace(/[ \u00A0]+/g, " ")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+  }
+
+  // Fallback text extraction for PDF ArrayBuffer if pdfjsLib is unavailable
+  function extractTextFromPdfFallback(arrayBuffer) {
+    const bytes = new Uint8Array(arrayBuffer);
+    let str = "";
+    for (let i = 0; i < bytes.length; i++) {
+      const b = bytes[i];
+      if ((b >= 32 && b <= 126) || b === 10 || b === 13) {
+        str += String.fromCharCode(b);
+      }
+    }
+    const textMatches = [];
+    const regex = /\(([^()]{2,})\)\s*T[jd]/g;
+    let m;
+    while ((m = regex.exec(str)) !== null) {
+      textMatches.push(m[1].replace(/\\([()\\])/g, "$1"));
+    }
+    return textMatches.length > 0 ? textMatches.join(" ") : "";
+  }
+
+  // Extract text from PDF using pdfjsLib or fallback
+  async function extractTextFromPdf(arrayBuffer) {
+    if (typeof window !== "undefined" && window.pdfjsLib) {
+      if (!window.pdfjsLib.GlobalWorkerOptions.workerSrc) {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      }
+      try {
+        const typedarray = new Uint8Array(arrayBuffer);
+        const loadingTask = window.pdfjsLib.getDocument({ data: typedarray });
+        const pdf = await loadingTask.promise;
+        const pageTexts = [];
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          const lineMap = {};
+          for (const item of textContent.items) {
+            if (!item.str) continue;
+            const y = Math.round(item.transform[5]);
+            if (!lineMap[y]) lineMap[y] = [];
+            lineMap[y].push(item.str);
+          }
+          const sortedYs = Object.keys(lineMap).map(Number).sort((a, b) => b - a);
+          const pageLines = sortedYs.map(y => lineMap[y].join(" ").trim()).filter(l => l.length > 0);
+          pageTexts.push(pageLines.join("\n"));
+        }
+        const combined = pageTexts.join(PAGE_BREAK);
+        if (combined.trim().length > 0) return combined;
+      } catch (err) {
+        console.warn("pdfjsLib parsing error, attempting fallback:", err);
+      }
+    }
+    return extractTextFromPdfFallback(arrayBuffer);
+  }
+
+  // Fallback text extraction for Word .docx ArrayBuffer if mammoth is unavailable
+  function extractTextFromDocxFallback(arrayBuffer) {
+    try {
+      const bytes = new Uint8Array(arrayBuffer);
+      const decoder = new TextDecoder("utf-8", { fatal: false });
+      const raw = decoder.decode(bytes);
+      const pMatches = raw.split(/<\/w:p>/g);
+      const lines = [];
+      for (const p of pMatches) {
+        const tMatches = [];
+        const tRegex = /<w:t[^>]*>([^<]+)<\/w:t>/g;
+        let m;
+        while ((m = tRegex.exec(p)) !== null) {
+          tMatches.push(m[1]);
+        }
+        if (tMatches.length > 0) {
+          lines.push(tMatches.join(""));
+        }
+      }
+      if (lines.length > 0) {
+        return lines.join("\n");
+      }
+    } catch (e) {
+      // ignore
+    }
+    return "";
+  }
+
+  // Extract text from DOCX using mammoth or fallback
+  async function extractTextFromDocx(arrayBuffer) {
+    if (typeof window !== "undefined" && window.mammoth) {
+      try {
+        const result = await window.mammoth.extractRawText({ arrayBuffer });
+        if (result && typeof result.value === "string" && result.value.trim().length > 0) {
+          return result.value;
+        }
+      } catch (err) {
+        console.warn("mammoth extraction error, attempting fallback:", err);
+      }
+    }
+    return extractTextFromDocxFallback(arrayBuffer);
+  }
+
+  // Master document extractor supporting .docx, .pdf, .txt, .md
+  async function extractDocument(file) {
+    if (!file) throw new Error("No file selected.");
+    const name = file.name || "document";
+    const ext = name.slice(name.lastIndexOf(".")).toLowerCase();
+
+    // 1. Text or Markdown
+    if (ext === ".txt" || ext === ".md" || (file.type && file.type.startsWith("text/"))) {
+      let raw = "";
+      if (typeof file.text === "function") {
+        raw = await file.text();
+      } else {
+        raw = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(new Error("Failed to read text file."));
+          reader.readAsText(file, "utf-8");
+        });
+      }
+      const cleaned = cleanExtractedText(raw);
+      if (!cleaned) throw new Error("The text file is empty.");
+      return cleaned;
+    }
+
+    // 2. PDF Document
+    if (ext === ".pdf" || file.type === "application/pdf") {
+      let arrayBuffer;
+      if (typeof file.arrayBuffer === "function") {
+        arrayBuffer = await file.arrayBuffer();
+      } else {
+        arrayBuffer = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(new Error("Failed to read PDF file."));
+          reader.readAsArrayBuffer(file);
+        });
+      }
+      const raw = await extractTextFromPdf(arrayBuffer);
+      const cleaned = cleanExtractedText(raw);
+      if (!cleaned) {
+        throw new Error("Could not extract readable text from PDF. It may contain scanned images without OCR.");
+      }
+      return cleaned;
+    }
+
+    // 3. Microsoft Word (.docx)
+    if (ext === ".docx" || file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+      let arrayBuffer;
+      if (typeof file.arrayBuffer === "function") {
+        arrayBuffer = await file.arrayBuffer();
+      } else {
+        arrayBuffer = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(new Error("Failed to read Word document."));
+          reader.readAsArrayBuffer(file);
+        });
+      }
+      const raw = await extractTextFromDocx(arrayBuffer);
+      const cleaned = cleanExtractedText(raw);
+      if (!cleaned) {
+        throw new Error("Could not extract readable text from Word document.");
+      }
+      return cleaned;
+    }
+
+    throw new Error(`Unsupported format "${ext}". Please upload a .docx, .pdf, .txt, or .md file.`);
+  }
+
+  // 1-Click IoT Demo Assignment Loader
+  function loadIotDemoAssignment() {
+    state.content = IOT_DEMO_CONTENT;
+    if (els.textInput) els.textInput.value = IOT_DEMO_CONTENT;
+
+    // Header fields: Subject: "Cyber Security in IoT", Assignment: "Assignment 3 Solutions", Date: Current Date
+    const today = new Date().toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric"
+    });
+
+    state.headerInfo = Object.assign({}, state.headerInfo, {
+      subject: "Cyber Security in IoT",
+      assignment: "Assignment 3 Solutions",
+      date: today
+    });
+
+    if (els.hdrSubject) els.hdrSubject.value = state.headerInfo.subject;
+    if (els.hdrAssignment) els.hdrAssignment.value = state.headerInfo.assignment;
+    if (els.hdrDate) els.hdrDate.value = state.headerInfo.date;
+
+    state.currentPage = 0;
+    recomputePages();
+    render();
+    saveState();
+  }
+
+  // Modal UI handlers
+  function openUploadModal() {
+    if (els.uploadModal) {
+      els.uploadModal.classList.remove("hidden");
+      resetUploadStatus();
+      if (els.dropZone) els.dropZone.focus();
+    }
+  }
+
+  function closeUploadModal() {
+    if (els.uploadModal) {
+      els.uploadModal.classList.add("hidden");
+      resetUploadStatus();
+      if (els.docFileInput) els.docFileInput.value = "";
+    }
+  }
+
+  function resetUploadStatus() {
+    if (!els.uploadStatus) return;
+    els.uploadStatus.className = "upload-status hidden";
+    if (els.statusSpinner) els.statusSpinner.classList.add("hidden");
+    if (els.statusIcon) els.statusIcon.textContent = "ℹ️";
+    if (els.statusText) els.statusText.textContent = "";
+  }
+
+  function setUploadStatus(type, message) {
+    if (!els.uploadStatus) return;
+    els.uploadStatus.className = `upload-status status-${type}`;
+    els.uploadStatus.classList.remove("hidden");
+    if (type === "loading") {
+      if (els.statusSpinner) els.statusSpinner.classList.remove("hidden");
+      if (els.statusIcon) els.statusIcon.textContent = "";
+    } else {
+      if (els.statusSpinner) els.statusSpinner.classList.add("hidden");
+      if (els.statusIcon) els.statusIcon.textContent = type === "success" ? "✓" : "⚠️";
+    }
+    if (els.statusText) els.statusText.textContent = message;
+  }
+
+  async function handleFileUpload(file) {
+    if (!file) return;
+    setUploadStatus("loading", `Reading "${file.name}" and extracting text...`);
+    try {
+      const extractedText = await extractDocument(file);
+      state.content = extractedText;
+      if (els.textInput) els.textInput.value = extractedText;
+      state.currentPage = 0;
+      recomputePages();
+      render();
+      saveState();
+
+      const pageCount = state.paginatedPages.length;
+      setUploadStatus("success", `✓ Successfully imported "${file.name}" (${extractedText.length.toLocaleString()} characters across ${pageCount} ${pageCount === 1 ? 'page' : 'pages'})!`);
+
+      setTimeout(() => {
+        closeUploadModal();
+      }, 1400);
+    } catch (err) {
+      console.error("Document upload error:", err);
+      setUploadStatus("error", err.message || "Failed to process document. Please try another file.");
     }
   }
 
@@ -1217,6 +1669,74 @@ Importance in Software Development:
     els.btnExportAllPdf.addEventListener("click", () => exportPdf(true));
 
     els.btnTopPrint.addEventListener("click", () => window.print());
+
+    // 11. Document Upload & Modal Interactions
+    if (els.btnTopUploadDoc) els.btnTopUploadDoc.addEventListener("click", openUploadModal);
+    if (els.btnUploadDoc) els.btnUploadDoc.addEventListener("click", openUploadModal);
+    if (els.btnCloseModal) els.btnCloseModal.addEventListener("click", closeUploadModal);
+    if (els.btnCancelModal) els.btnCancelModal.addEventListener("click", closeUploadModal);
+
+    if (els.uploadModal) {
+      els.uploadModal.addEventListener("click", (e) => {
+        if (e.target === els.uploadModal) closeUploadModal();
+      });
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && els.uploadModal && !els.uploadModal.classList.contains("hidden")) {
+        closeUploadModal();
+      }
+    });
+
+    if (els.dropZone && els.docFileInput) {
+      els.dropZone.addEventListener("click", () => els.docFileInput.click());
+      els.dropZone.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          els.docFileInput.click();
+        }
+      });
+
+      ["dragenter", "dragover"].forEach((eventName) => {
+        els.dropZone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          els.dropZone.classList.add("drag-over");
+        });
+      });
+
+      ["dragleave", "drop"].forEach((eventName) => {
+        els.dropZone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          els.dropZone.classList.remove("drag-over");
+        });
+      });
+
+      els.dropZone.addEventListener("drop", (e) => {
+        const dt = e.dataTransfer;
+        if (dt && dt.files && dt.files.length > 0) {
+          handleFileUpload(dt.files[0]);
+        }
+      });
+
+      els.docFileInput.addEventListener("change", (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+          handleFileUpload(e.target.files[0]);
+        }
+      });
+    }
+
+    // 12. 1-Click Load IoT Demo Assignment
+    if (els.btnTopDemoIot) {
+      els.btnTopDemoIot.addEventListener("click", loadIotDemoAssignment);
+    }
+    if (els.btnModalDemoIot) {
+      els.btnModalDemoIot.addEventListener("click", () => {
+        loadIotDemoAssignment();
+        closeUploadModal();
+      });
+    }
   }
 
   // Initialization
@@ -1226,5 +1746,24 @@ Importance in Software Development:
   syncControlsToState();
   bindEvents();
   render();
+
+  // Expose API for automated testing & external integrations
+  const publicApi = {
+    state,
+    paginate,
+    cleanExtractedText,
+    extractDocument,
+    extractTextFromPdf,
+    extractTextFromDocx,
+    loadIotDemoAssignment,
+    IOT_DEMO_CONTENT
+  };
+
+  if (typeof window !== "undefined") {
+    window.HandTextAI = publicApi;
+  }
+  if (typeof globalThis !== "undefined") {
+    globalThis.HandTextAI = publicApi;
+  }
 
 })();

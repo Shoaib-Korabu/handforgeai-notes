@@ -101,6 +101,17 @@ for (const font of requiredFonts) {
 }
 console.log('  ✓ Handwriting fonts verified (Caveat, Kalam, Patrick Hand, Shadows Into Light, Homemade Apple)');
 
+// Check Upload Document feature and Demo Assignment
+if (!htmlContent.includes('btn-top-upload-doc') || !htmlContent.includes('upload-modal') || !htmlContent.includes('doc-file-input')) {
+  console.error('❌ Missing Upload Document UI elements in index.html');
+  process.exit(1);
+}
+if (!htmlContent.includes('btn-top-demo-iot') || !scriptContent.includes('IOT_DEMO_CONTENT')) {
+  console.error('❌ Missing IoT Demo Assignment elements in index.html / script.js');
+  process.exit(1);
+}
+console.log('  ✓ Upload Doc feature & IoT Demo Assignment verified');
+
 // 4. Validate style.css
 const cssContent = fs.readFileSync(path.join(rootDir, 'style.css'), 'utf-8');
 const requiredCssClasses = [

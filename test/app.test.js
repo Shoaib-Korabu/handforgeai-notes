@@ -147,5 +147,43 @@ describe('HandTextAI v0.1 Test Suite', () => {
     assert.ok(script.includes('footerX = isSpiral ? (nbX + nbW - 60)'), 'Footer must be placed inside notebook');
   });
 
+  test('Demo Assignment 3: Cyber Security in IoT is implemented', () => {
+    assert.ok(script.includes('IOT_DEMO_CONTENT'), 'Script must have IOT_DEMO_CONTENT');
+    assert.ok(script.includes('Assignment 3 Solutions: Cyber Security in IoT'), 'Must contain IoT assignment title');
+    assert.ok(script.includes('Question 1: Explain the importance of cybersecurity in IoT'), 'Must contain Question 1');
+    assert.ok(script.includes('Question 2: Describe the CIA Triad'), 'Must contain Question 2');
+    assert.ok(script.includes('Question 3: Explain the IoT attack surface'), 'Must contain Question 3');
+    assert.ok(script.includes('Question 4: Discuss data privacy issues in IoT'), 'Must contain Question 4');
+    assert.ok(script.includes('Question 5: Explain the security requirements of IoT systems'), 'Must contain Question 5');
+    assert.ok(script.includes('loadIotDemoAssignment'), 'Script must have loadIotDemoAssignment function');
+    assert.ok(html.includes('btn-top-demo-iot'), 'HTML must have 1-click IoT demo button in top bar');
+    assert.ok(html.includes('Load IoT Demo Assignment'), 'Button must have clear student label');
+  });
+
+  test('Upload Assignment as Document feature is implemented', () => {
+    // Check UI elements for document upload
+    assert.ok(html.includes('id="btn-top-upload-doc"'), 'HTML must have upload doc button in top actions');
+    assert.ok(html.includes('id="btn-upload-doc"'), 'HTML must have upload doc button in editor toolbar');
+    assert.ok(html.includes('id="upload-modal"'), 'HTML must have upload modal dialog');
+    assert.ok(html.includes('id="drop-zone"'), 'HTML must have drag-and-drop zone');
+    assert.ok(html.includes('id="doc-file-input"'), 'HTML must have hidden file input');
+    
+    // Check supported file formats badge in HTML
+    assert.ok(html.includes('.docx'), 'Must advertise docx support');
+    assert.ok(html.includes('.pdf'), 'Must advertise pdf support');
+    assert.ok(html.includes('.txt'), 'Must advertise txt support');
+    assert.ok(html.includes('.md'), 'Must advertise md support');
+
+    // Check script document extraction methods
+    assert.ok(script.includes('extractDocument'), 'Script must have extractDocument function');
+    assert.ok(script.includes('extractTextFromDocx'), 'Script must have docx extraction');
+    assert.ok(script.includes('extractTextFromPdf'), 'Script must have pdf extraction');
+    assert.ok(script.includes('cleanExtractedText'), 'Script must have text cleaner for extracted docs');
+
+    // Check external libraries are included
+    assert.ok(html.includes('mammoth.browser.min.js'), 'Must include mammoth.js for DOCX parsing');
+    assert.ok(html.includes('pdf.min.js'), 'Must include pdf.js for PDF text extraction');
+  });
+
 });
 
