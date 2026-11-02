@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HandTextAI — Text to Realistic Handwriting for Assignments</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Homemade+Apple&family=Kalam:wght@300;400;700&family=Patrick+Hand&family=Shadows+Into+Light&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="print.css" media="print">
+</head>
+<body>
+  <!-- Top Navigation Bar -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-icon">✍︎</div>
+      <div>
+        <div class="brand-title-wrap">
+          <h1>HandTextAI</h1>
+          <span class="ver">v0.1.0</span>
+          <span class="badge-subtle">Assignment Edition</span>
+        </div>
+        <p class="brand-sub">AI-assisted natural handwriting generator for students</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button id="btn-top-template" type="button" class="btn btn-secondary" title="Insert formatted Assignment Q&A template">
+        <span class="btn-icon">📋</span> Insert Q&A
+      </button>
+      <button id="btn-top-png" type="button" class="btn btn-secondary" title="Download 300 DPI high-resolution PNG image">
+        <span class="btn-icon">🖼️</span> PNG (300 DPI)
+      </button>
+      <button id="btn-top-pdf" type="button" class="btn btn-primary" title="Export high-resolution 300 DPI PDF document">
+        <span class="btn-icon">📄</span> Download PDF
+      </button>
+      <button id="btn-top-print" type="button" class="btn btn-outline" title="Open native browser print dialog">
+        <span class="btn-icon">🖨️</span> Print
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Application Layout -->
+  <main class="layout">
+    <!-- Left Control Panel & Multi-Page Terminal Input -->
+    <aside class="panel controls" aria-label="Editor Controls">
+      
+      <!-- Multi-Page Tab Navigation -->
+      <section class="control-card">
+        <div class="card-header-row">
+          <label class="section-label">Assignment Pages (1 – 10)</label>
+          <div class="page-nav-btns">
+            <button id="btn-prev-page" class="btn-icon-sm" type="button" title="Previous Page">‹</button>
+            <span id="page-indicator-text" class="page-indicator-badge">Page 1 / 10</span>
+            <button id="btn-next-page" class="btn-icon-sm" type="button" title="Next Page">›</button>
+          </div>
+        </div>
+
+        <div class="page-tabs" id="page-tabs" role="tablist" aria-label="Page selection">
+          <!-- 10 Page Tabs dynamically rendered or static -->
+          <button type="button" class="tab-btn active" data-page="0" role="tab" aria-selected="true">P1</button>
+          <button type="button" class="tab-btn" data-page="1" role="tab" aria-selected="false">P2</button>
+          <button type="button" class="tab-btn" data-page="2" role="tab" aria-selected="false">P3</button>
+          <button type="button" class="tab-btn" data-page="3" role="tab" aria-selected="false">P4</button>
+          <button type="button" class="tab-btn" data-page="4" role="tab" aria-selected="false">P5</button>
+          <button type="button" class="tab-btn" data-page="5" role="tab" aria-selected="false">P6</button>
+          <button type="button" class="tab-btn" data-page="6" role="tab" aria-selected="false">P7</button>
+          <button type="button" class="tab-btn" data-page="7" role="tab" aria-selected="false">P8</button>
+          <button type="button" class="tab-btn" data-page="8" role="tab" aria-selected="false">P9</button>
+          <button type="button" class="tab-btn" data-page="9" role="tab" aria-selected="false">P10</button>
+        </div>
+
+        <!-- Character and Line Capacity Indicators -->
+        <div class="meta-row">
+          <div class="stats-group">
+            <span id="char-count">0 characters</span>
+            <span class="stat-sep">•</span>
+            <span id="line-count">0 lines</span>
+          </div>
+          <span id="capacity-badge" class="badge-status badge-ok">Fits 1 Page</span>
+        </div>
+
+        <!-- Terminal Input Textarea -->
+        <div class="textarea-wrap">
+          <textarea id="text-input" rows="11" placeholder="Type or paste your assignment text here..."></textarea>
+        </div>
+
+        <div class="action-row">
+          <button id="btn-insert-template" type="button" class="btn-text">
+            <span>📝</span> Insert Q&A Template
+          </button>
+          <button id="btn-clear-page" type="button" class="btn-text btn-text-danger">
+            <span>🗑️</span> Clear Page
+          </button>
+        </div>
+      </section>
+
+      <!-- Student Assignment Header Settings -->
+      <section class="control-card">
+        <div class="card-header-row">
+          <label class="section-label" for="toggle-header">Student Assignment Header</label>
+          <label class="toggle-switch-compact">
+            <input id="toggle-header" type="checkbox" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div id="header-fields" class="header-fields-grid">
+          <div>
+            <label for="hdr-name">Student Name</label>
+            <input id="hdr-name" type="text" value="Alex Chen" placeholder="e.g. Alex Chen">
+          </div>
+          <div>
+            <label for="hdr-roll">Roll No / ID</label>
+            <input id="hdr-roll" type="text" value="CS-2024-089" placeholder="e.g. CS-2024-089">
+          </div>
+          <div>
+            <label for="hdr-subject">Subject</label>
+            <input id="hdr-subject" type="text" value="Distributed Systems" placeholder="e.g. Distributed Systems">
+          </div>
+          <div>
+            <label for="hdr-assignment">Assignment Title</label>
+            <input id="hdr-assignment" type="text" value="Assignment #1" placeholder="e.g. Assignment #1">
+          </div>
+          <div class="grid-col-span-2">
+            <label for="hdr-date">Submission Date</label>
+            <input id="hdr-date" type="text" value="November 2, 2026" placeholder="e.g. November 2, 2026">
+          </div>
+        </div>
+      </section>
+
+      <!-- Handwriting Realism Engine (From User Image) -->
+      <section class="control-card realism-card">
+        <div class="section-title-wrap">
+          <label class="section-label">Realism Engine</label>
+          <span class="badge-accent">Anti-Detection</span>
+        </div>
+
+        <!-- Toggle 1: Vary each letter -->
+        <div class="realism-toggle-item">
+          <div class="realism-info">
+            <div class="realism-title-line">
+              <span class="realism-title">Vary each letter</span>
+              <span class="badge-new">New</span>
+            </div>
+            <p class="realism-desc">Repeated letters never look exactly the same.</p>
+          </div>
+          <label class="toggle-switch">
+            <input id="toggle-vary-letters" type="checkbox" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <!-- Toggle 2: Natural movement -->
+        <div class="realism-toggle-item">
+          <div class="realism-info">
+            <div class="realism-title-line">
+              <span class="realism-title">Natural movement</span>
+            </div>
+            <p class="realism-desc">Words, line starts and line spacing vary like a real hand.</p>
+          </div>
+          <label class="toggle-switch">
+            <input id="toggle-natural-movement" type="checkbox" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <!-- Toggle 3: Inkflow -->
+        <div class="realism-toggle-item highlight-border">
+          <div class="realism-info">
+            <div class="realism-title-line">
+              <span class="realism-title">Inkflow</span>
+            </div>
+            <p class="realism-desc">Pressure changes stroke by stroke, like a real pen.</p>
+          </div>
+          <label class="toggle-switch">
+            <input id="toggle-inkflow" type="checkbox" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <!-- Realism Jitter Intensity Slider -->
+        <div class="slider-group">
+          <div class="slider-header">
+            <label for="jitter-intensity">Organic Variance Intensity</label>
+            <span id="jitter-intensity-val" class="slider-val">1.0x</span>
+          </div>
+          <input id="jitter-intensity" type="range" min="0.3" max="2.0" step="0.1" value="1.0">
+        </div>
+      </section>
+
+      <!-- Paper Style (3 Styles Only: Blank, Ruled, Spiral) -->
+      <section class="control-card">
+        <label class="section-label">Paper Style (v0.1 Presets)</label>
+        <div class="paper-styles-selector" role="radiogroup" aria-label="Paper Style Selection">
+          <label class="paper-option-label" for="style-ruled">
+            <input type="radio" id="style-ruled" name="page-style" value="ruled" checked>
+            <div class="paper-option-card">
+              <div class="paper-thumb thumb-ruled"></div>
+              <div class="paper-option-info">
+                <strong>Standard Assignment Ruled</strong>
+                <small>Blue ruled lines, red margin, student header</small>
+              </div>
+            </div>
+          </label>
+
+          <label class="paper-option-label" for="style-blank">
+            <input type="radio" id="style-blank" name="page-style" value="blank">
+            <div class="paper-option-card">
+              <div class="paper-thumb thumb-blank"></div>
+              <div class="paper-option-info">
+                <strong>Blank White / Ivory Page</strong>
+                <small>Clean sheet with subtle warm paper texture</small>
+              </div>
+            </div>
+          </label>
+
+          <label class="paper-option-label" for="style-spiral">
+            <input type="radio" id="style-spiral" name="page-style" value="spiral">
+            <div class="paper-option-card">
+              <div class="paper-thumb thumb-spiral"></div>
+              <div class="paper-option-info">
+                <strong>Photorealistic Spiral Notebook</strong>
+                <small>Photo mode with realistic coil on desk</small>
+              </div>
+            </div>
+          </label>
+        </div>
+
+        <div class="row-2col mt-sm">
+          <div>
+            <label for="paper-size">Paper Size</label>
+            <select id="paper-size">
+              <option value="a4" selected>A4 (210 × 297 mm)</option>
+              <option value="letter">US Letter (8.5 × 11 in)</option>
+            </select>
+          </div>
+          <div>
+            <label for="page-margin">Page Margin <span id="margin-val">22</span>mm</label>
+            <input id="page-margin" type="range" min="14" max="32" value="22">
+          </div>
+        </div>
+      </section>
+
+      <!-- Pen & Handwriting Font Styling -->
+      <section class="control-card">
+        <label class="section-label">Pen & Handwriting Style</label>
+        
+        <div>
+          <label for="font-family">Handwriting Font</label>
+          <select id="font-family">
+            <option value="Caveat" selected>Caveat (Casual Student)</option>
+            <option value="Kalam">Kalam (Clean & Neat)</option>
+            <option value="Patrick Hand">Patrick Hand (Classroom Print)</option>
+            <option value="Shadows Into Light">Shadows Into Light (Quick Notes)</option>
+            <option value="Homemade Apple">Homemade Apple (Cursive Flow)</option>
+          </select>
+        </div>
+
+        <div class="row-2col mt-sm">
+          <div>
+            <label for="font-size">Font Size <span id="font-size-val">21</span>px</label>
+            <input id="font-size" type="range" min="16" max="32" value="21">
+          </div>
+          <div>
+            <label for="rule-height">Line Pitch / Snapping <span id="rule-height-val">34</span>px</label>
+            <input id="rule-height" type="range" min="28" max="44" value="34">
+          </div>
+        </div>
+
+        <!-- Ink Selection -->
+        <div class="mt-sm">
+          <label>Ink Color</label>
+          <div class="ink-selector-row">
+            <button type="button" class="ink-btn ink-royal-blue active" data-color="#1a2a8c" title="Royal Blue (#1a2a8c)">
+              <span class="ink-color-dot" style="background-color: #1a2a8c;"></span>
+              <span>Royal Blue</span>
+            </button>
+            <button type="button" class="ink-btn ink-carbon-black" data-color="#181818" title="Carbon Black (#181818)">
+              <span class="ink-color-dot" style="background-color: #181818;"></span>
+              <span>Carbon Black</span>
+            </button>
+            <div class="custom-color-picker-wrap" title="Pick custom ink color">
+              <input id="ink-color" type="color" value="#1a2a8c">
+              <label for="ink-color" class="custom-color-label">Custom</label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Export & Print Actions -->
+      <section class="control-card">
+        <label class="section-label">Export Assignment</label>
+        <div class="export-buttons-grid">
+          <button id="btn-export-pdf" type="button" class="btn btn-primary btn-block">
+            <span>📄</span> Download Current Page (PDF)
+          </button>
+          <button id="btn-export-all-pdf" type="button" class="btn btn-secondary btn-block">
+            <span>📚</span> Export All Pages (Multi-Page PDF)
+          </button>
+          <button id="btn-export-png" type="button" class="btn btn-outline btn-block">
+            <span>🖼️</span> Download 300 DPI PNG
+          </button>
+        </div>
+      </section>
+
+      <p class="footer-note">HandTextAI · University Assignment Engine · Fully client-side</p>
+    </aside>
+
+    <!-- Right Live Preview Panel -->
+    <section class="panel preview-wrap" id="preview-panel" aria-label="Live Preview">
+      <!-- Preview Sticky Toolbar -->
+      <div class="preview-toolbar">
+        <div class="preview-status">
+          <span class="live-dot"></span>
+          <span id="preview-page-title">Page 1 Preview</span>
+          <span class="paper-tag" id="preview-style-tag">Assignment Ruled</span>
+        </div>
+        <div class="preview-actions">
+          <div class="zoom-controls">
+            <button id="btn-zoom-out" type="button" class="btn-icon-sm" title="Zoom Out">−</button>
+            <span id="zoom-val" class="zoom-badge">100%</span>
+            <button id="btn-zoom-in" type="button" class="btn-icon-sm" title="Zoom In">+</button>
+            <button id="btn-zoom-fit" type="button" class="btn-sm btn-outline" title="Fit to Screen">Fit</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preview Viewport Container -->
+      <div class="preview-stage" id="preview-stage">
+        <!-- Optional Desk Background Container for Spiral Mode -->
+        <div class="desk-container" id="desk-container">
+          
+          <!-- Physical Paper Page -->
+          <div id="page" class="page a4 ruled" aria-live="polite">
+            
+            <!-- Spiral Binding (Shown in Spiral Notebook Mode) -->
+            <div id="spiral-binding" class="spiral-binding" aria-hidden="true">
+              <!-- Dynamically populated spiral rings & holes in JS -->
+            </div>
+
+            <!-- Page Student Information Header -->
+            <header id="page-header" class="page-header">
+              <div class="header-top-row">
+                <div class="hdr-cell"><span class="hdr-label">NAME:</span> <span id="ph-name" class="hdr-value">Alex Chen</span></div>
+                <div class="hdr-cell"><span class="hdr-label">ROLL NO:</span> <span id="ph-roll" class="hdr-value">CS-2024-089</span></div>
+                <div class="hdr-cell"><span class="hdr-label">DATE:</span> <span id="ph-date" class="hdr-value">November 2, 2026</span></div>
+              </div>
+              <div class="header-bottom-row">
+                <div class="hdr-cell"><span class="hdr-label">SUBJECT:</span> <span id="ph-subject" class="hdr-value">Distributed Systems</span></div>
+                <div class="hdr-cell"><span class="hdr-label">ASSIGNMENT:</span> <span id="ph-assignment" class="hdr-value">Assignment #1</span></div>
+                <div class="hdr-cell"><span class="hdr-label">PAGE:</span> <span id="ph-page" class="hdr-value">1 of 10</span></div>
+              </div>
+            </header>
+
+            <!-- Red Margin Line for Standard Ruled -->
+            <div id="page-margin-line" class="page-margin-line" aria-hidden="true"></div>
+
+            <!-- Handwritten Text Output Container with Ruled Line Snapping -->
+            <div id="page-text" class="page-text">
+              <!-- Dynamically rendered lines -->
+            </div>
+
+            <!-- Page Footer (Page number) -->
+            <footer id="page-footer" class="page-footer">
+              <span id="pf-num">Page 1</span>
+            </footer>
+
+          </div> <!-- /#page -->
+
+        </div> <!-- /#desk-container -->
+      </div> <!-- /#preview-stage -->
+    </section>
+  </main>
+
+  <!-- External Libraries & Main Application Script -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
