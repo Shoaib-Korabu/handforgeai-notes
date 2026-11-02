@@ -1,6 +1,6 @@
 {
   "name": "handtext-ai",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "AI-assisted text-to-handwriting web application for assignments with photorealistic paper styles and natural handwriting variation",
   "main": "script.js",
   "type": "module",

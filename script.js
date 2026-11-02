@@ -12,25 +12,86 @@
 (() => {
   "use strict";
 
-  // Default initial sample assignment text for students
-  const DEFAULT_SAMPLE_TEXT = `ASSIGNMENT #1: DISTRIBUTED SYSTEMS
-Topic: Consensus Protocols and Partition Tolerance
+  // Default seed: Software Engineering Assignment 2 solutions as one flowing document.
+  // \f (form feed) is the explicit page-break sentinel the user can insert via the "⏎ New Page" button.
+  const DEFAULT_CONTENT = `ASSIGNMENT 2 SOLUTIONS
 
-Q1. Explain the CAP Theorem and why network partitions force a trade-off.
-Ans: The CAP Theorem states that a distributed data store can simultaneously provide at most two of the following three guarantees:
-1. Consistency: Every read receives the most recent write or an error.
-2. Availability: Every non-failing node returns a non-error response.
-3. Partition Tolerance: The system continues to operate despite network packet loss.
+Q1. Define software. Explain the characteristics of software with suitable examples.
 
-When a network partition occurs, nodes are split into disconnected partitions. The system must either reject writes to preserve Consistency (CP), or accept writes on both sides and sacrifice Consistency for Availability (AP).
+Definition:
+Software is a set of computer programs, instructions, procedures, and documentation that tell computer hardware what to do and how to perform specific tasks. (Examples: Google Chrome, Microsoft Word, Operating Systems).
 
-Q2. What is the Byzantine Generals Problem in distributed networks?
-Ans: It is a classic agreement problem where multiple computer nodes must agree on a coordinated strategy, even when some actors are traitorous or communicate false information.`;
+Key Characteristics of Software:
+1. Intangible: Software has no physical form. It cannot be touched like hardware; it exists as digital code and logic.
+2. Developed/Engineered, Not Manufactured: Software is created through logical design and coding rather than mass-produced on an assembly line.
+3. Does Not Wear Out: Software does not physically degrade or wear out over time like hardware. However, it requires maintenance to fix bugs or update features.
+4. Reusable: Software modules and functions can be reused in different projects to save development time.
+5. Easy to Modify: Software can be updated, customized, and maintained to meet changing user requirements.
 
-  // Application State
+Q2. Explain the different software application domains with suitable examples.
+A software application domain is a specific area or field where software is used to solve problems or perform tasks.
+
+Major Software Application Domains:
+1. System Software: Manages computer hardware and provides a platform for applications. (Examples: Operating Systems like Windows and Linux, Device Drivers).
+2. Embedded Software: Resides inside hardware devices to control specific device functions. (Examples: Microwave ovens, washing machines, automobile control units).
+3. Web Applications: Software that runs on web servers and is accessed through web browsers. (Examples: Amazon shopping portal, online banking sites).
+4. Business Software: Used by organizations to manage daily business operations. (Examples: Payroll systems, accounting tools, inventory management).
+5. Artificial Intelligence (AI) Software: Uses complex algorithms to simulate human intelligence and decision-making. (Examples: Chatbots like ChatGPT, speech recognition systems).
+\fQ3. Define Software Engineering. Explain the need and importance of Software Engineering.
+
+Definition:
+Software Engineering is the systematic application of engineering principles, methods, and practices to the design, development, testing, operation, and maintenance of software.
+
+Need and Importance of Software Engineering:
+1. Manages High Complexity: Modern software systems are large and complex; systematic engineering provides structure and planning.
+2. Ensures Quality and Reliability: Saves costs and prevents failures through systematic testing and bug reduction.
+3. Controls Cost and Time: Proper scheduling and estimation prevent project delay and budget overruns.
+4. Improves Maintainability: Structured code and documentation make it easy to modify and update software over time.
+5. Enables Team Collaboration: Provides standard guidelines and processes so multiple developers can work together efficiently.
+
+Q4. Explain McCall's Software Quality Factors with suitable examples.
+McCall's Software Quality Model (1977) categorizes 11 software quality factors under 3 product perspectives:
+
+1. Product Operation (How well the software runs):
+   - Correctness: Does the software meet specifications accurately? (Example: A calculator giving exact math results).
+   - Reliability: Does it perform consistently without crashing? (Example: Banking software running 24/7).
+   - Efficiency: Does it optimize system resources like memory and CPU?
+   - Integrity: Is data secure against unauthorized access?
+   - Usability: Is the user interface simple and easy to operate?
+
+2. Product Revision (How easy it is to change):
+   - Maintainability: Ease of finding and fixing bugs.
+   - Flexibility: Ease of modifying software for new requirements.
+   - Testability: Ease of testing software modules.
+
+3. Product Transition (How easy it is to move):
+   - Portability: Ability to run across different hardware/OS environments. (Example: App running on Android and iOS).
+   - Reusability: Ability to reuse code parts in other systems.
+   - Interoperability: Ability to connect and work with other systems. (Example: Payment gateway connecting with a bank).
+\fQ5. Explain Software Engineering Practice and discuss its importance in software development.
+
+Software Engineering Practice:
+Software Engineering Practice consists of the core principles, concepts, methods, and tools applied daily during software development. It encompasses fundamental activities: communication, planning, modeling (design), construction (coding/testing), and deployment.
+
+Core Best Practices:
+- KISS (Keep It Simple, Stupid): Choose the simplest design and implementation that satisfies requirements.
+- DRY (Don't Repeat Yourself): Avoid duplicate code by creating reusable functions and components.
+- YAGNI (You Aren't Gonna Need It): Implement only features required right now, avoiding unneeded complexity.
+- Separation of Concerns (SoC): Divide software into separate modules (UI, Business Logic, Database) so each handles a single responsibility.
+
+Importance in Software Development:
+1. Reduces errors and technical debt during development.
+2. Improves code readability, testability, and long-term maintainability.
+3. Ensures consistent quality across development teams.`;
+
+  const PAGE_BREAK = "\f"; // explicit page-break sentinel inserted by "⏎ New Page" button
+  const MAX_PAGES = 10;
+
+  // Application State — single flowing content + computed paginated pages.
   const state = {
-    currentPage: 0,
-    pages: Array.from({ length: 10 }, (_, i) => (i === 0 ? DEFAULT_SAMPLE_TEXT : "")),
+    content: DEFAULT_CONTENT,
+    paginatedPages: [""],     // computed by paginate(); never written to directly
+    currentPage: 0,           // index into paginatedPages for the preview
     
     // Realism Toggles (Matching User Uploaded Image)
     varyLetters: true,         // "Vary each letter" [New]
@@ -52,10 +113,10 @@ Ans: It is a classic agreement problem where multiple computer nodes must agree 
     // Student Assignment Header
     headerEnabled: true,
     headerInfo: {
-      name: "Alex Chen",
-      roll: "CS-2024-089",
-      subject: "Distributed Systems",
-      assignment: "Assignment #1",
+      name: "Shoaib Korabu",
+      roll: "SE-2026-042",
+      subject: "Software Engineering",
+      assignment: "Assignment 2",
       date: "November 2, 2026"
     },
 
@@ -162,14 +223,107 @@ Ans: It is a classic agreement problem where multiple computer nodes must agree 
     return h >>> 0;
   }
 
+  // Pagination engine: flow `state.content` across pages using line-count estimation.
+  // Respects explicit \f (PAGE_BREAK) markers inserted by the "⏎ New Page" button.
+  // Uses current ruleHeight + fontSize + margin to estimate lines-per-page and chars-per-line.
+  function computeLinesPerPage() {
+    // A4 usable height (~780px at 96 DPI below header) divided by rule height.
+    return Math.max(14, Math.floor(780 / Math.max(14, state.ruleHeight)));
+  }
+  function computeCharsPerLine() {
+    // A4 usable width ≈ 210mm - (margin + 15mm right pad) = ~170mm at default
+    // Convert to px at ~3.78 px/mm, then divide by avg glyph width (~0.48 * font size).
+    const usableMm = 210 - state.marginMm - 15;
+    const usablePx = usableMm * 3.78;
+    const glyphW = Math.max(6, state.fontSize * 0.48);
+    return Math.max(18, Math.floor(usablePx / glyphW));
+  }
+
+  function paginate(content) {
+    const linesPerPage = computeLinesPerPage();
+    const charsPerLine = computeCharsPerLine();
+    const sections = String(content).split(PAGE_BREAK);
+    const pages = [];
+    let page = "";
+    let lineCount = 0;
+    let colPos = 0;
+
+    const pushPage = () => {
+      if (pages.length < MAX_PAGES) pages.push(page.replace(/\n+$/, ""));
+      page = "";
+      lineCount = 0;
+      colPos = 0;
+    };
+
+    for (let s = 0; s < sections.length; s++) {
+      if (s > 0) pushPage();  // explicit page break
+
+      const paragraphs = sections[s].split("\n");
+      for (let p = 0; p < paragraphs.length; p++) {
+        if (p > 0) {
+          page += "\n";
+          if (colPos > 0) lineCount++;
+          colPos = 0;
+        }
+        if (lineCount >= linesPerPage) pushPage();
+
+        const words = paragraphs[p].split(/( )/); // keep spaces as tokens
+        for (const token of words) {
+          if (token === "") continue;
+          if (colPos + token.length > charsPerLine && colPos > 0) {
+            lineCount++;
+            colPos = 0;
+            page += "\n";
+            if (lineCount >= linesPerPage) pushPage();
+          }
+          page += token;
+          colPos += token.length;
+        }
+      }
+      // close trailing line in paragraph set
+      if (colPos > 0) {
+        lineCount++;
+        colPos = 0;
+      }
+      if (lineCount >= linesPerPage) pushPage();
+    }
+    if (page.trim().length > 0) pushPage();
+    return pages.length > 0 ? pages : [""];
+  }
+
+  function recomputePages() {
+    state.paginatedPages = paginate(state.content);
+    if (state.currentPage >= state.paginatedPages.length) {
+      state.currentPage = Math.max(0, state.paginatedPages.length - 1);
+    }
+  }
+
+  // Insert text at the textarea's current cursor position (preserves selection point).
+  function insertAtCursor(text) {
+    const ta = els.textInput;
+    const start = ta.selectionStart ?? ta.value.length;
+    const end = ta.selectionEnd ?? ta.value.length;
+    ta.value = ta.value.slice(0, start) + text + ta.value.slice(end);
+    const newPos = start + text.length;
+    ta.selectionStart = ta.selectionEnd = newPos;
+    ta.focus();
+    state.content = ta.value;
+    recomputePages();
+    render();
+    saveState();
+  }
+
   // Load state from localStorage if available
   function loadStoredState() {
     try {
       const saved = localStorage.getItem("handtextai_state_v1");
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed.pages)) {
-          state.pages = parsed.pages;
+        if (typeof parsed.content === "string" && parsed.content.length > 0) {
+          state.content = parsed.content;
+        } else if (Array.isArray(parsed.pages)) {
+          // Backwards-compat: migrate per-page arrays to a single content string.
+          state.content = parsed.pages.filter((s) => typeof s === "string").join("\n" + PAGE_BREAK);
         }
         if (parsed.headerInfo) {
           state.headerInfo = Object.assign(state.headerInfo, parsed.headerInfo);
@@ -192,7 +346,7 @@ Ans: It is a classic agreement problem where multiple computer nodes must agree 
   function saveState() {
     try {
       localStorage.setItem("handtextai_state_v1", JSON.stringify({
-        pages: state.pages,
+        content: state.content,
         headerInfo: state.headerInfo,
         varyLetters: state.varyLetters,
         naturalMovement: state.naturalMovement,
@@ -210,7 +364,8 @@ Ans: It is a classic agreement problem where multiple computer nodes must agree 
 
   // Initialize UI form controls to match state
   function syncControlsToState() {
-    els.textInput.value = state.pages[state.currentPage] || "";
+    // Textarea always shows the FULL document; the pagination engine distributes it across pages.
+    els.textInput.value = state.content;
     els.toggleVaryLetters.checked = state.varyLetters;
     els.toggleNaturalMovement.checked = state.naturalMovement;
     els.toggleInkflow.checked = state.inkflow;
@@ -257,17 +412,20 @@ Ans: It is a classic agreement problem where multiple computer nodes must agree 
   }
 
   function updateTabButtons() {
+    const totalPages = state.paginatedPages.length;
     els.tabBtns.forEach((btn) => {
       const pageIdx = parseInt(btn.getAttribute("data-page"), 10);
       btn.classList.toggle("active", pageIdx === state.currentPage);
       btn.setAttribute("aria-selected", pageIdx === state.currentPage ? "true" : "false");
-      const hasContent = Boolean(state.pages[pageIdx] && state.pages[pageIdx].trim().length > 0);
+      const hasContent = pageIdx < totalPages && Boolean(state.paginatedPages[pageIdx] && state.paginatedPages[pageIdx].trim().length > 0);
       btn.classList.toggle("has-content", hasContent);
+      // Dim tabs that have no content yet (page hasn't been filled by flow)
+      btn.classList.toggle("tab-empty", pageIdx >= totalPages);
     });
 
-    els.pageIndicatorText.textContent = `Page ${state.currentPage + 1} / 10`;
+    els.pageIndicatorText.textContent = `Page ${state.currentPage + 1} / ${totalPages}`;
     els.previewPageTitle.textContent = `Page ${state.currentPage + 1} Preview`;
-    els.phPage.textContent = `${state.currentPage + 1} of 10`;
+    els.phPage.textContent = `${state.currentPage + 1} of ${totalPages}`;
     els.pfNum.textContent = `Page ${state.currentPage + 1}`;
   }
 
@@ -335,7 +493,7 @@ Ans: It is a classic agreement problem where multiple computer nodes must agree 
 
   // Render Handwritten Text with Line Snapping and the 3 Realism Effects
   function renderText() {
-    const raw = state.pages[state.currentPage] || "";
+    const raw = state.paginatedPages[state.currentPage] || "";
     const intensity = state.realismIntensity;
     const varyLetter = state.varyLetters;
     const naturalMove = state.naturalMovement;
@@ -433,27 +591,25 @@ Ans: It is a classic agreement problem where multiple computer nodes must agree 
     updateCapacityStats(raw, lines.length);
   }
 
-  // Character and Line Capacity Indicators
-  function updateCapacityStats(text, lineCount) {
-    const chars = text.length;
-    els.charCount.textContent = `${chars} characters`;
-    els.lineCount.textContent = `${lineCount} lines`;
+  // Character counter + total pages used (whole document, not just current page).
+  function updateCapacityStats(_pageText, _lineCount) {
+    const totalChars = state.content.length;
+    const totalPages = state.paginatedPages.length;
+    const totalLines = state.paginatedPages.reduce((acc, p) => acc + (p ? p.split("\n").length : 0), 0);
 
-    // A4 page height is 297mm (~1122px at 96 DPI).
-    // Usable height accounting for header and margins is ~780px.
-    const maxRecommended = Math.max(18, Math.floor(780 / state.ruleHeight));
+    els.charCount.textContent = `${totalChars} characters`;
+    els.lineCount.textContent = `${totalLines} lines`;
 
     els.capacityBadge.className = "badge-status";
-    if (lineCount <= maxRecommended) {
+    if (totalPages === 1) {
       els.capacityBadge.classList.add("badge-ok");
-      els.capacityBadge.textContent = `Fits 1 Page (${lineCount}/${maxRecommended})`;
-    } else if (lineCount <= maxRecommended + 3) {
-      els.capacityBadge.classList.add("badge-warn");
-      els.capacityBadge.textContent = `Near Limit (${lineCount}/${maxRecommended})`;
+      els.capacityBadge.textContent = `Fits 1 Page`;
+    } else if (totalPages <= MAX_PAGES) {
+      els.capacityBadge.classList.add("badge-ok");
+      els.capacityBadge.textContent = `${totalPages} Pages`;
     } else {
       els.capacityBadge.classList.add("badge-danger");
-      const estPages = Math.ceil(lineCount / maxRecommended);
-      els.capacityBadge.textContent = `Overflow (~${estPages} Pages)`;
+      els.capacityBadge.textContent = `Overflow (${MAX_PAGES}+ Pages)`;
     }
   }
 
@@ -464,13 +620,12 @@ Ans: It is a classic agreement problem where multiple computer nodes must agree 
     updateTabButtons();
   }
 
-  // Switch to target page tab (0..9)
+  // Switch which page the preview shows. Textarea stays bound to the full content.
   function switchPage(pageIdx) {
-    if (pageIdx < 0 || pageIdx > 9) return;
+    const maxIdx = Math.max(0, state.paginatedPages.length - 1);
+    if (pageIdx < 0 || pageIdx > maxIdx) return;
     state.currentPage = pageIdx;
-    els.textInput.value = state.pages[state.currentPage] || "";
     render();
-    saveState();
   }
 
   // 300 DPI Canvas Rendering Engine
@@ -621,7 +776,7 @@ Ans: It is a classic agreement problem where multiple computer nodes must agree 
     }
 
     // 4. Render Handwritten Text on Ruled Lines
-    const raw = state.pages[pageIndex] || "";
+    const raw = state.paginatedPages[pageIndex] || "";
     const lines = raw.split(/\r?\n/);
     const startX = marginPx + (state.pageStyle === "blank" ? 0 : 40);
     const textStartY = headerBottomY + rulePitchPx;
@@ -753,8 +908,8 @@ Ans: It is a classic agreement problem where multiple computer nodes must agree 
       });
 
       const pagesToExport = allPages
-        ? state.pages.map((text, idx) => ({ text, idx })).filter((p) => p.text.trim().length > 0 || p.idx === 0)
-        : [{ text: state.pages[state.currentPage], idx: state.currentPage }];
+        ? state.paginatedPages.map((text, idx) => ({ text, idx }))
+        : [{ text: state.paginatedPages[state.currentPage], idx: state.currentPage }];
 
       for (let i = 0; i < pagesToExport.length; i++) {
         const item = pagesToExport[i];
@@ -778,15 +933,15 @@ Ans: It is a classic agreement problem where multiple computer nodes must agree 
 
   // Event Listeners Wiring
   function bindEvents() {
-    // 1. Text Area Input
+    // 1. Text Area Input — one flowing document. Pagination computes which page shows what.
     els.textInput.addEventListener("input", (e) => {
-      state.pages[state.currentPage] = e.target.value;
-      renderText();
-      updateTabButtons();
+      state.content = e.target.value;
+      recomputePages();
+      render();
       saveState();
     });
 
-    // 2. Tab Navigation
+    // 2. Tab Navigation (preview only — textarea stays unchanged)
     els.tabBtns.forEach((btn) => {
       btn.addEventListener("click", () => {
         const pageIdx = parseInt(btn.getAttribute("data-page"), 10);
@@ -799,13 +954,15 @@ Ans: It is a classic agreement problem where multiple computer nodes must agree 
     });
 
     els.btnNextPage.addEventListener("click", () => {
-      if (state.currentPage < 9) switchPage(state.currentPage + 1);
+      if (state.currentPage < state.paginatedPages.length - 1) switchPage(state.currentPage + 1);
     });
 
-    // 3. Templates & Clear Actions
+    // 3. Templates, New Page, Clear
     const insertTemplateHandler = () => {
-      state.pages[state.currentPage] = DEFAULT_SAMPLE_TEXT;
-      els.textInput.value = DEFAULT_SAMPLE_TEXT;
+      state.content = DEFAULT_CONTENT;
+      els.textInput.value = DEFAULT_CONTENT;
+      state.currentPage = 0;
+      recomputePages();
       render();
       saveState();
     };
@@ -813,10 +970,18 @@ Ans: It is a classic agreement problem where multiple computer nodes must agree 
     els.btnInsertTemplate.addEventListener("click", insertTemplateHandler);
     els.btnTopTemplate.addEventListener("click", insertTemplateHandler);
 
+    // "⏎ New Page" inserts an explicit page-break at the cursor.
+    const btnNewPage = document.getElementById("btn-new-page");
+    if (btnNewPage) {
+      btnNewPage.addEventListener("click", () => insertAtCursor(PAGE_BREAK));
+    }
+
     els.btnClearPage.addEventListener("click", () => {
-      if (confirm(`Clear all text on Page ${state.currentPage + 1}?`)) {
-        state.pages[state.currentPage] = "";
+      if (confirm("Clear the ENTIRE document? This cannot be undone.")) {
+        state.content = "";
         els.textInput.value = "";
+        state.currentPage = 0;
+        recomputePages();
         render();
         saveState();
       }
@@ -882,13 +1047,15 @@ Ans: It is a classic agreement problem where multiple computer nodes must agree 
 
     els.paperSize.addEventListener("change", (e) => {
       state.paperSize = e.target.value;
-      applyStyles();
+      recomputePages();
+      render();
     });
 
     els.pageMargin.addEventListener("input", (e) => {
       state.marginMm = parseInt(e.target.value, 10);
       els.marginVal.textContent = state.marginMm;
-      applyStyles();
+      recomputePages();
+      render();
     });
 
     // 7. Pen & Typography
@@ -901,15 +1068,16 @@ Ans: It is a classic agreement problem where multiple computer nodes must agree 
     els.fontSize.addEventListener("input", (e) => {
       state.fontSize = parseInt(e.target.value, 10);
       els.fontSizeVal.textContent = state.fontSize;
-      applyStyles();
+      recomputePages();
+      render();
       saveState();
     });
 
     els.ruleHeight.addEventListener("input", (e) => {
       state.ruleHeight = parseInt(e.target.value, 10);
       els.ruleHeightVal.textContent = state.ruleHeight;
-      applyStyles();
-      renderText();
+      recomputePages();
+      render();
       saveState();
     });
 
@@ -963,6 +1131,7 @@ Ans: It is a classic agreement problem where multiple computer nodes must agree 
 
   // Initialization
   loadStoredState();
+  recomputePages();
   setupSpiralRings();
   syncControlsToState();
   bindEvents();

@@ -18,7 +18,7 @@
       <div>
         <div class="brand-title-wrap">
           <h1>HandTextAI</h1>
-          <span class="ver">v0.1.0</span>
+          <span class="ver">v0.1.1</span>
           <span class="badge-subtle">Assignment Edition</span>
         </div>
         <p class="brand-sub">AI-assisted natural handwriting generator for students</p>
@@ -80,17 +80,20 @@
           <span id="capacity-badge" class="badge-status badge-ok">Fits 1 Page</span>
         </div>
 
-        <!-- Terminal Input Textarea -->
+        <!-- Terminal Input Textarea — one flowing document. Pagination is automatic. -->
         <div class="textarea-wrap">
-          <textarea id="text-input" rows="11" placeholder="Type or paste your assignment text here..."></textarea>
+          <textarea id="text-input" rows="14" placeholder="Type or paste your full assignment here. Pages fill automatically — click '⏎ New Page' to force a page break (e.g. before 'Ocean Floor' section)."></textarea>
         </div>
 
         <div class="action-row">
-          <button id="btn-insert-template" type="button" class="btn-text">
+          <button id="btn-insert-template" type="button" class="btn-text" title="Replace content with sample Q&A">
             <span>📝</span> Insert Q&A Template
           </button>
-          <button id="btn-clear-page" type="button" class="btn-text btn-text-danger">
-            <span>🗑️</span> Clear Page
+          <button id="btn-new-page" type="button" class="btn-text" title="Insert a page break at the cursor so the next line starts on a new page">
+            <span>⏎</span> New Page
+          </button>
+          <button id="btn-clear-page" type="button" class="btn-text btn-text-danger" title="Clear the entire document">
+            <span>🗑️</span> Clear All
           </button>
         </div>
       </section>
@@ -107,19 +110,19 @@
         <div id="header-fields" class="header-fields-grid">
           <div>
             <label for="hdr-name">Student Name</label>
-            <input id="hdr-name" type="text" value="Alex Chen" placeholder="e.g. Alex Chen">
+            <input id="hdr-name" type="text" value="Shoaib Korabu" placeholder="e.g. Alex Chen">
           </div>
           <div>
             <label for="hdr-roll">Roll No / ID</label>
-            <input id="hdr-roll" type="text" value="CS-2024-089" placeholder="e.g. CS-2024-089">
+            <input id="hdr-roll" type="text" value="SE-2026-042" placeholder="e.g. CS-2024-089">
           </div>
           <div>
             <label for="hdr-subject">Subject</label>
-            <input id="hdr-subject" type="text" value="Distributed Systems" placeholder="e.g. Distributed Systems">
+            <input id="hdr-subject" type="text" value="Software Engineering" placeholder="e.g. Distributed Systems">
           </div>
           <div>
             <label for="hdr-assignment">Assignment Title</label>
-            <input id="hdr-assignment" type="text" value="Assignment #1" placeholder="e.g. Assignment #1">
+            <input id="hdr-assignment" type="text" value="Assignment 2" placeholder="e.g. Assignment #1">
           </div>
           <div class="grid-col-span-2">
             <label for="hdr-date">Submission Date</label>

@@ -67,8 +67,10 @@ describe('HandTextAI v0.1 Test Suite', () => {
     assert.ok(html.includes('id="btn-insert-template"'), 'Insert Q&A template button must exist');
     assert.ok(html.includes('id="btn-top-template"'), 'Topbar Insert Q&A button must exist');
 
-    // Verify script supports 10-page array
-    assert.ok(script.includes('Array.from({ length: 10 }'), 'Script must initialize 10 pages in state');
+    // Verify script supports up to 10 paginated pages
+    assert.ok(script.includes('MAX_PAGES = 10'), 'Script must cap pagination at 10 pages');
+    assert.ok(script.includes('function paginate'), 'Script must contain a pagination engine');
+    assert.ok(script.includes('PAGE_BREAK'), 'Script must support explicit page-break markers');
   });
 
   test('Ink Options: Royal Blue (#1a2a8c) and Carbon Black (#181818)', () => {

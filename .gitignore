@@ -7,3 +7,7 @@ node_modules/
 dist/
 .env
 .env.local
+
+# Local render test artifacts (not part of the shipped app)
+test_*.png
+test_render.html
