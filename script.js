@@ -523,6 +523,7 @@ Security Requirements across IoT Layers:
         if (typeof parsed.varyLetters === "boolean") state.varyLetters = parsed.varyLetters;
         if (typeof parsed.naturalMovement === "boolean") state.naturalMovement = parsed.naturalMovement;
         if (typeof parsed.inkflow === "boolean") state.inkflow = parsed.inkflow;
+        if (typeof parsed.realismIntensity === "number") state.realismIntensity = parsed.realismIntensity;
         if (parsed.pageStyle) state.pageStyle = parsed.pageStyle;
         if (parsed.fontFamily) state.fontFamily = parsed.fontFamily;
         if (parsed.inkColor) state.inkColor = parsed.inkColor;
@@ -543,6 +544,7 @@ Security Requirements across IoT Layers:
         varyLetters: state.varyLetters,
         naturalMovement: state.naturalMovement,
         inkflow: state.inkflow,
+        realismIntensity: state.realismIntensity,
         pageStyle: state.pageStyle,
         fontFamily: state.fontFamily,
         inkColor: state.inkColor,
@@ -563,6 +565,11 @@ Security Requirements across IoT Layers:
     els.toggleInkflow.checked = state.inkflow;
     els.jitterIntensity.value = state.realismIntensity;
     els.jitterIntensityVal.textContent = state.realismIntensity.toFixed(1) + "x";
+    const presetPills = document.querySelectorAll(".btn-preset-pill");
+    presetPills.forEach((p) => {
+      const val = parseFloat(p.getAttribute("data-intensity"));
+      p.classList.toggle("active", Math.abs(val - state.realismIntensity) < 0.05);
+    });
 
     els.toggleHeader.checked = state.headerEnabled;
     els.hdrName.value = state.headerInfo.name;
@@ -695,6 +702,37 @@ Security Requirements across IoT Layers:
     els.previewStyleTag.textContent = styleLabels[state.pageStyle] || "Ruled";
   }
 
+  // Dynamic Ink Tone Shading Utility: calculates natural pigment concentration based on pen pressure
+  function getDynamicInkColor(baseHex, pressure, isPunctuation) {
+    let r = 26, g = 42, b = 140; // fallback royal blue
+    if (baseHex && baseHex.startsWith("#")) {
+      const hex = baseHex.slice(1);
+      if (hex.length === 6) {
+        r = parseInt(hex.slice(0, 2), 16);
+        g = parseInt(hex.slice(2, 4), 16);
+        b = parseInt(hex.slice(4, 6), 16);
+      } else if (hex.length === 3) {
+        r = parseInt(hex[0] + hex[0], 16);
+        g = parseInt(hex[1] + hex[1], 16);
+        b = parseInt(hex[2] + hex[2], 16);
+      }
+    }
+
+    // Pressure factor centered around 0.88
+    const factor = (pressure - 0.88) * 1.6;
+    let nr = Math.min(255, Math.max(0, Math.round(r * (1 - factor * 0.32))));
+    let ng = Math.min(255, Math.max(0, Math.round(g * (1 - factor * 0.32))));
+    let nb = Math.min(255, Math.max(0, Math.round(b * (1 - factor * 0.32))));
+
+    if (isPunctuation) {
+      nr = Math.max(0, Math.round(nr * 0.88));
+      ng = Math.max(0, Math.round(ng * 0.88));
+      nb = Math.max(0, Math.round(nb * 0.88));
+    }
+
+    return `rgb(${nr}, ${ng}, ${nb})`;
+  }
+
   // Render Handwritten Text with Line Snapping and the 3 Realism Effects
   function renderText() {
     const raw = state.paginatedPages[state.currentPage] || "";
@@ -722,15 +760,17 @@ Security Requirements across IoT Layers:
         return;
       }
 
-      // 1. Natural Movement: Organic line start drift (margin drift) and line-to-line spacing variance
+      // 1. Natural Movement: Organic line start drift (margin drift), line tilt, and line-to-line spacing variance
       if (naturalMove) {
         const lineRand = mulberry32(baseSeed + lineIdx * 1337);
-        const lineDrift = (Math.sin(lineIdx * 0.45) * 3.5 + (lineRand() - 0.5) * 3.0) * intensity;
+        const lineDrift = (Math.sin(lineIdx * 0.45) * 3.8 + (lineRand() - 0.5) * 3.2) * intensity;
         lineEl.style.paddingLeft = Math.max(0, lineDrift).toFixed(1) + "px";
 
-        // Natural movement: line spacing / pitch variance
+        // Natural movement: arm pivot line tilt (-0.3deg to +0.3deg)
+        const lineTilt = (Math.sin(lineIdx * 0.75) * 0.22 + (lineRand() - 0.5) * 0.26) * intensity;
         const lineSpacingJitter = (lineRand() - 0.5) * 1.6 * intensity;
-        lineEl.style.transform = `translateY(${lineSpacingJitter.toFixed(2)}px)`;
+        lineEl.style.transform = `translateY(${lineSpacingJitter.toFixed(2)}px) rotate(${lineTilt.toFixed(2)}deg)`;
+        lineEl.style.transformOrigin = "left center";
       }
 
       // Split into words
@@ -741,7 +781,7 @@ Security Requirements across IoT Layers:
 
         // 2. Natural Movement: Word baseline wobble & variable word spacing
         if (naturalMove) {
-          const wobble = Math.sin((lineIdx * 2.5 + wordIdx) * 0.7) * 1.3 * intensity;
+          const wobble = Math.sin((lineIdx * 2.5 + wordIdx) * 0.7) * 1.35 * intensity;
           wordEl.style.transform = `translateY(${wobble.toFixed(2)}px)`;
 
           const wordRand = mulberry32(baseSeed + lineIdx * 100 + wordIdx * 17);
@@ -749,9 +789,14 @@ Security Requirements across IoT Layers:
           wordEl.style.setProperty("--word-space", `${space}em`);
         }
 
+        let prevCh = null;
+
         // Render characters within word
         for (let chIdx = 0; chIdx < word.length; chIdx++) {
           const ch = word[chIdx];
+          const isDuplicate = prevCh && (ch.toLowerCase() === prevCh.toLowerCase());
+          prevCh = ch;
+
           const glyphEl = document.createElement("span");
           glyphEl.className = "hand-glyph";
           glyphEl.textContent = ch;
@@ -763,37 +808,71 @@ Security Requirements across IoT Layers:
           const glyphSeed = baseSeed + (lineIdx * 7919) + (wordIdx * 499) + (chIdx * 31) + (occ * 1337) + ch.charCodeAt(0);
           const glyphRand = mulberry32(glyphSeed);
 
-          // 3. Vary each letter: Per-character random rotation, scale, slant/skew, micro-jitter
+          // 3. Vary each letter: Per-character random rotation, scale, slant/skew, micro-jitter, and duplicate letter differentiation
           if (varyLetter) {
             const r = () => (glyphRand() - 0.5) * 2;
-            const rot = (r() * 2.4 * intensity).toFixed(2);
-            const dy = (r() * 1.1 * intensity).toFixed(2);
-            const sx = (1 + r() * 0.038 * intensity).toFixed(3);
-            const sy = (1 + r() * 0.038 * intensity).toFixed(3);
-            const skew = (r() * 1.6 * intensity).toFixed(2);
-            const mr = (r() * 0.45 * intensity).toFixed(2);
+            let rot = r() * 2.4 * intensity;
+            let dy = r() * 1.15 * intensity;
+            let sx = 1 + r() * 0.038 * intensity;
+            let sy = 1 + r() * 0.038 * intensity;
+            let skew = r() * 1.6 * intensity;
+            let mr = r() * 0.45 * intensity;
 
-            glyphEl.style.transform = `translateY(${dy}px) rotate(${rot}deg) skewX(${skew}deg) scale(${sx}, ${sy})`;
-            glyphEl.style.marginRight = `${mr}px`;
+            // Anti-detection: Consecutive duplicate letters (e.g. "oo", "ee", "ll", "ss", "tt") must be visibly differentiated
+            if (isDuplicate) {
+              rot = (-rot * 1.1) + ((glyphRand() > 0.5 ? 1.6 : -1.6) * intensity);
+              dy = (-dy * 0.9) + ((glyphRand() - 0.5) * 1.2 * intensity);
+              sx = sx * (glyphRand() > 0.5 ? 0.95 : 1.05);
+              sy = sy * (glyphRand() > 0.5 ? 1.05 : 0.95);
+              skew = -skew * 1.25;
+              mr += (0.5 * intensity);
+            }
+
+            // Word role dynamics (initial vs terminal)
+            if (chIdx === 0) {
+              sx *= 1.02;
+              sy *= 1.02;
+            } else if (chIdx === word.length - 1 && !/[.,!?:;"'()[\]{}]/.test(ch)) {
+              skew += (0.5 * intensity);
+            }
+
+            glyphEl.style.transform = `translateY(${dy.toFixed(2)}px) rotate(${rot.toFixed(2)}deg) skewX(${skew.toFixed(2)}deg) scale(${sx.toFixed(3)}, ${sy.toFixed(3)})`;
+            glyphEl.style.marginRight = `${mr.toFixed(2)}px`;
           }
 
-          // 4. Inkflow: Pressure changes stroke by stroke (opacity & stroke variations)
+          // 4. Inkflow: Pressure changes stroke by stroke, dynamic pigment shading, and paper fiber bleed
           if (inkflow) {
-            const isPunctuation = /[.,!?:;"'()[\]{}]/.test(ch);
+            const isPunctuation = /[.,!?:;"'()[\]{}•\-]/.test(ch);
             const isStart = chIdx === 0;
+            const isEnd = chIdx === word.length - 1;
             let pressure;
             let strokeWidth;
 
-            if (isPunctuation || isStart) {
+            if (isPunctuation) {
               pressure = 0.94 + glyphRand() * 0.06;
-              strokeWidth = (0.28 * intensity).toFixed(2);
+              strokeWidth = (0.34 * intensity).toFixed(2);
+            } else if (isStart) {
+              pressure = 0.91 + glyphRand() * 0.09;
+              strokeWidth = (0.24 * intensity).toFixed(2);
+            } else if (isEnd) {
+              pressure = 0.78 + glyphRand() * 0.16;
+              strokeWidth = ((0.08 + glyphRand() * 0.14) * intensity).toFixed(2);
             } else {
               pressure = 0.80 + glyphRand() * 0.18;
               strokeWidth = ((0.10 + glyphRand() * 0.18) * intensity).toFixed(2);
             }
+
+            const inkTone = getDynamicInkColor(state.inkColor, pressure, isPunctuation);
+            glyphEl.style.color = inkTone;
             glyphEl.style.opacity = Math.min(1.0, pressure).toFixed(2);
-            glyphEl.style.webkitTextStroke = `${strokeWidth}px currentColor`;
-            glyphEl.style.textShadow = `0 0 ${(0.22 + glyphRand() * 0.32).toFixed(2)}px currentColor`;
+            glyphEl.style.webkitTextStroke = `${strokeWidth}px ${inkTone}`;
+            const bleedRadius = isPunctuation ? 0.45 : (0.20 + glyphRand() * 0.28);
+            glyphEl.style.textShadow = `0 0 ${bleedRadius.toFixed(2)}px ${inkTone}`;
+          } else {
+            glyphEl.style.color = state.inkColor;
+            glyphEl.style.opacity = "1.0";
+            glyphEl.style.webkitTextStroke = "0px transparent";
+            glyphEl.style.textShadow = "none";
           }
 
           wordEl.appendChild(glyphEl);
@@ -1048,25 +1127,38 @@ Security Requirements across IoT Layers:
 
       let curX = startX;
 
-      // Natural movement: line start drift & line spacing jitter
+      // Natural movement: line start drift, arm pivot line tilt, & line spacing jitter
       let lineSpacingJitter = 0;
+      let lineTilt = 0;
       if (state.naturalMovement) {
         const lineRand = mulberry32(baseSeed + lineIdx * 1337);
-        const lineDrift = (Math.sin(lineIdx * 0.45) * 3.5 + (lineRand() - 0.5) * 3.0) * state.realismIntensity * scale;
+        const lineDrift = (Math.sin(lineIdx * 0.45) * 3.8 + (lineRand() - 0.5) * 3.2) * state.realismIntensity * scale;
         curX += Math.max(0, lineDrift);
+        lineTilt = (Math.sin(lineIdx * 0.75) * 0.22 + (lineRand() - 0.5) * 0.26) * state.realismIntensity;
         lineSpacingJitter = (lineRand() - 0.5) * 1.6 * state.realismIntensity * scale;
       }
 
+      ctx.save();
+      if (lineTilt !== 0) {
+        ctx.translate(curX, lineY);
+        ctx.rotate((lineTilt * Math.PI) / 180);
+        ctx.translate(-curX, -lineY);
+      }
+
+      let prevCh = null;
       const words = lineText.split(" ");
       words.forEach((word, wordIdx) => {
         // Natural movement: baseline wobble & word spacing
         let wobbleY = 0;
         if (state.naturalMovement) {
-          wobbleY = Math.sin((lineIdx * 2.5 + wordIdx) * 0.7) * 1.3 * state.realismIntensity * scale;
+          wobbleY = Math.sin((lineIdx * 2.5 + wordIdx) * 0.7) * 1.35 * state.realismIntensity * scale;
         }
 
         for (let chIdx = 0; chIdx < word.length; chIdx++) {
           const ch = word[chIdx];
+          const isDuplicate = prevCh && (ch.toLowerCase() === prevCh.toLowerCase());
+          prevCh = ch;
+
           const occ = (charOccurrences[ch] = (charOccurrences[ch] || 0) + 1);
           const glyphSeed = baseSeed + (lineIdx * 7919) + (wordIdx * 499) + (chIdx * 31) + (occ * 1337) + ch.charCodeAt(0);
           const glyphRand = mulberry32(glyphSeed);
@@ -1079,22 +1171,53 @@ Security Requirements across IoT Layers:
 
           if (state.varyLetters) {
             const r = () => (glyphRand() - 0.5) * 2;
-            rot = (r() * 2.4 * state.realismIntensity * Math.PI) / 180;
-            dy = r() * 1.1 * state.realismIntensity * scale;
+            let rotDeg = r() * 2.4 * state.realismIntensity;
+            dy = r() * 1.15 * state.realismIntensity * scale;
             sx = 1 + r() * 0.038 * state.realismIntensity;
             sy = 1 + r() * 0.038 * state.realismIntensity;
-            skew = (r() * 1.6 * state.realismIntensity * Math.PI) / 180;
+            let skewDeg = r() * 1.6 * state.realismIntensity;
+
+            // Anti-detection: Consecutive duplicate letters differentiated
+            if (isDuplicate) {
+              rotDeg = (-rotDeg * 1.1) + ((glyphRand() > 0.5 ? 1.6 : -1.6) * state.realismIntensity);
+              dy = (-dy * 0.9) + ((glyphRand() - 0.5) * 1.2 * state.realismIntensity * scale);
+              sx = sx * (glyphRand() > 0.5 ? 0.95 : 1.05);
+              sy = sy * (glyphRand() > 0.5 ? 1.05 : 0.95);
+              skewDeg = -skewDeg * 1.25;
+            }
+
+            // Word role dynamics (initial vs terminal)
+            if (chIdx === 0) {
+              sx *= 1.02;
+              sy *= 1.02;
+            } else if (chIdx === word.length - 1 && !/[.,!?:;"'()[\]{}]/.test(ch)) {
+              skewDeg += (0.5 * state.realismIntensity);
+            }
+
+            rot = (rotDeg * Math.PI) / 180;
+            skew = (skewDeg * Math.PI) / 180;
           }
 
           let pressure = 1.0;
+          const isPunctuation = /[.,!?:;"'()[\]{}•\-]/.test(ch);
+          const isStart = chIdx === 0;
+          const isEnd = chIdx === word.length - 1;
+
           if (state.inkflow) {
-            const isPunctuation = /[.,!?:;"'()[\]{}•\-]/.test(ch);
-            const isStart = chIdx === 0;
-            pressure = (isPunctuation || isStart) ? (0.94 + glyphRand() * 0.06) : (0.80 + glyphRand() * 0.18);
-            ctx.globalAlpha = Math.min(1.0, pressure);
-          } else {
-            ctx.globalAlpha = 1.0;
+            if (isPunctuation) {
+              pressure = 0.94 + glyphRand() * 0.06;
+            } else if (isStart) {
+              pressure = 0.91 + glyphRand() * 0.09;
+            } else if (isEnd) {
+              pressure = 0.78 + glyphRand() * 0.16;
+            } else {
+              pressure = 0.80 + glyphRand() * 0.18;
+            }
           }
+
+          const inkTone = state.inkflow ? getDynamicInkColor(state.inkColor, pressure, isPunctuation) : state.inkColor;
+          ctx.fillStyle = inkTone;
+          ctx.globalAlpha = state.inkflow ? Math.min(1.0, pressure) : 1.0;
 
           ctx.save();
           ctx.translate(curX, lineY + wobbleY + lineSpacingJitter + dy);
@@ -1104,10 +1227,15 @@ Security Requirements across IoT Layers:
           ctx.font = `${actualFontSize}px "${state.fontFamily}", cursive`;
           ctx.fillText(ch, 0, 0);
 
-          // Inkflow fiber bleed simulation for heavy strokes
-          if (state.inkflow && pressure > 0.90) {
-            ctx.globalAlpha = 0.16;
-            ctx.fillText(ch, 0.4, 0.4);
+          // Inkflow fiber bleed simulation for heavy strokes & punctuation
+          if (state.inkflow) {
+            if (isPunctuation) {
+              ctx.globalAlpha = 0.22;
+              ctx.fillText(ch, 0.4 * scale, 0.4 * scale);
+            } else if (pressure > 0.90) {
+              ctx.globalAlpha = 0.15;
+              ctx.fillText(ch, 0.35 * scale, 0.35 * scale);
+            }
           }
           ctx.restore();
 
@@ -1120,6 +1248,8 @@ Security Requirements across IoT Layers:
         const spaceW = (0.34 + spaceRand() * 0.20 * state.realismIntensity) * actualFontSize;
         curX += spaceW;
       });
+
+      ctx.restore(); // restore line tilt
     });
 
     ctx.restore();
@@ -1570,10 +1700,31 @@ Security Requirements across IoT Layers:
       saveState();
     });
 
+    const presetPills = document.querySelectorAll(".btn-preset-pill");
+
     els.jitterIntensity.addEventListener("input", (e) => {
       state.realismIntensity = parseFloat(e.target.value);
       els.jitterIntensityVal.textContent = state.realismIntensity.toFixed(1) + "x";
+      presetPills.forEach((p) => {
+        const val = parseFloat(p.getAttribute("data-intensity"));
+        p.classList.toggle("active", Math.abs(val - state.realismIntensity) < 0.05);
+      });
       renderText();
+      saveState();
+    });
+
+    presetPills.forEach((pill) => {
+      pill.addEventListener("click", () => {
+        const val = parseFloat(pill.getAttribute("data-intensity"));
+        if (!isNaN(val)) {
+          state.realismIntensity = val;
+          els.jitterIntensity.value = val;
+          els.jitterIntensityVal.textContent = val.toFixed(1) + "x";
+          presetPills.forEach((p) => p.classList.toggle("active", p === pill));
+          renderText();
+          saveState();
+        }
+      });
     });
 
     // 6. Paper Style Selection (Only 3 Styles)

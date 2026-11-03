@@ -636,6 +636,41 @@ html, body {
   color: var(--primary);
 }
 
+/* Realism Intensity Quick Preset Pills */
+.realism-presets-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.btn-preset-pill {
+  flex: 1;
+  padding: 4px 6px;
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+
+.btn-preset-pill:hover {
+  background: #f1f5f9;
+  color: var(--text-main);
+  border-color: #cbd5e1;
+}
+
+.btn-preset-pill.active {
+  background: #eff6ff;
+  color: var(--primary);
+  border-color: #93c5fd;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.08);
+}
+
 .controls input[type="range"] {
   width: 100%;
   height: 5px;
@@ -1134,6 +1169,7 @@ html, body {
   box-sizing: border-box;
   position: relative;
   overflow: visible;
+  transform-origin: left bottom;
 }
 
 /* Realism: Empty lines still keep exact rule-height pitch */
@@ -1154,6 +1190,7 @@ html, body {
   display: inline-block;
   transform-origin: bottom center;
   position: relative;
+  font-feature-settings: "kern" 1, "liga" 1;
 }
 
 /* Realism: Inkflow subtle bleed effect */

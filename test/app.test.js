@@ -185,5 +185,30 @@ describe('HandTextAI v0.1 Test Suite', () => {
     assert.ok(html.includes('pdf.min.js'), 'Must include pdf.js for PDF text extraction');
   });
 
+  test('Enhanced Realism Engine: Duplicate Letter Differentiation & Word Role Dynamics', () => {
+    assert.ok(script.includes('isDuplicate'), 'Must detect consecutive duplicate letters');
+    assert.ok(script.includes('ch.toLowerCase() === prevCh.toLowerCase()'), 'Must compare consecutive characters case-insensitively');
+    assert.ok(script.includes('skewDeg'), 'Must apply character skew variation');
+    assert.ok(html.includes('realism-presets-row'), 'HTML must have quick preset pills row');
+    assert.ok(html.includes('Neat (0.6x)'), 'Must offer Neat preset');
+    assert.ok(html.includes('Natural (1.0x)'), 'Must offer Natural preset');
+    assert.ok(html.includes('Exam Rush (1.6x)'), 'Must offer Exam Rush preset');
+  });
+
+  test('Enhanced Realism Engine: Dynamic Ink Tone Shading and Fiber Bleed', () => {
+    assert.ok(script.includes('getDynamicInkColor'), 'Must include getDynamicInkColor function');
+    assert.ok(script.includes('inkTone'), 'Must compute dynamic ink tone per stroke');
+    assert.ok(script.includes('webkitTextStroke'), 'Must apply realistic pen stroke width');
+    assert.ok(script.includes('textShadow'), 'Must apply paper fiber ink bleed shadow');
+    assert.ok(css.includes('.btn-preset-pill'), 'CSS must define preset pill buttons');
+    assert.ok(css.includes('transform-origin: left bottom'), 'CSS must anchor line pivot to handwriting margin');
+  });
+
+  test('Enhanced Realism Engine: Arm Pivot Line Slant & Margin Drift', () => {
+    assert.ok(script.includes('lineTilt'), 'Must calculate arm pivot line tilt angle');
+    assert.ok(script.includes('lineDrift'), 'Must calculate organic left margin drift');
+    assert.ok(script.includes('lineSpacingJitter'), 'Must calculate line pitch jitter');
+  });
+
 });
 

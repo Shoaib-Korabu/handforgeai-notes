@@ -18,7 +18,7 @@
       <div>
         <div class="brand-title-wrap">
           <h1>HandTextAI</h1>
-          <span class="ver">v0.1.1</span>
+          <span class="ver">v0.1.2</span>
           <span class="badge-subtle">Assignment Edition</span>
         </div>
         <p class="brand-sub">AI-assisted natural handwriting generator for students</p>
@@ -190,13 +190,18 @@
           </label>
         </div>
 
-        <!-- Realism Jitter Intensity Slider -->
+        <!-- Realism Jitter Intensity Slider & Presets -->
         <div class="slider-group">
           <div class="slider-header">
             <label for="jitter-intensity">Organic Variance Intensity</label>
             <span id="jitter-intensity-val" class="slider-val">1.0x</span>
           </div>
           <input id="jitter-intensity" type="range" min="0.3" max="2.0" step="0.1" value="1.0">
+          <div class="realism-presets-row" role="group" aria-label="Realism presets">
+            <button type="button" class="btn-preset-pill" data-intensity="0.6" title="Neat, measured student handwriting">Neat (0.6x)</button>
+            <button type="button" class="btn-preset-pill active" data-intensity="1.0" title="Natural human handwriting with organic flow">Natural (1.0x)</button>
+            <button type="button" class="btn-preset-pill" data-intensity="1.6" title="Fast exam handwriting with energetic slant and drift">Exam Rush (1.6x)</button>
+          </div>
         </div>
       </section>
 
